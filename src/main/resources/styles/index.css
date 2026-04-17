@@ -1,0 +1,17 @@
+.root {
+    /* Escala Getronics / Tech Green */
+    --color-neutral-medium: #AFAEAF;  /* 1 - Cinza equilibrado para bordas ou textos secundários */
+    --color-neutral-light:  #F2F2F2;  /* 5 - Fundo principal ou áreas de contraste limpo */
+    --color-primary-deep:   #01402E;  /* 2 - Verde escuro para fundos de containers ou headers */
+    --color-primary-main:   #038C4C;  /* 3 - Verde médio para botões ou estados normais */
+    --color-primary-accent: #0DF205;  /* 4 - Verde Neon para o degradê, foco e progresso */
+    --color-primary-black: #010001;   /* 5 - Quase Preto */
+    -fx-font-family: "Mark Pro", "System";
+    -fx-font-size: 14px;
+}
+
+/** LABELS */
+Label{
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-espresso-dark;
+}
