@@ -45,11 +45,6 @@ public class WrapperController {
     }
 
     @FXML
-    void openConfigWindow() {
-        openNewWindow(E_Fxml.SETTINGS, E_windowLayout.CENTER_FULL);
-    }
-
-    @FXML
     void openHomeView() {
         openNewWindow(E_Fxml.HOME, E_windowLayout.CENTER_FULL);
     }
@@ -63,8 +58,7 @@ public class WrapperController {
     void closeApplication() {
         final Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle("Sair do Sistema");
-        alert.setHeaderText("Você está prestes a sair.");
-        alert.setContentText("Deseja realmente fechar o programa?");
+        alert.setHeaderText("Deseja realmente fechar o programa?");
 
         final ButtonType btnSim = new ButtonType("Sim");
         final ButtonType btnNao = new ButtonType("Não", ButtonBar.ButtonData.CANCEL_CLOSE);

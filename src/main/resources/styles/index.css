@@ -1,17 +1,29 @@
 .root {
     /* Escala Getronics / Tech Green */
-    --color-neutral-medium: #AFAEAF;  /* 1 - Cinza equilibrado para bordas ou textos secundários */
-    --color-neutral-light:  #F2F2F2;  /* 5 - Fundo principal ou áreas de contraste limpo */
-    --color-primary-deep:   #01402E;  /* 2 - Verde escuro para fundos de containers ou headers */
-    --color-primary-main:   #038C4C;  /* 3 - Verde médio para botões ou estados normais */
-    --color-primary-accent: #0DF205;  /* 4 - Verde Neon para o degradê, foco e progresso */
-    --color-primary-black: #010001;   /* 5 - Quase Preto */
+    -fx-color-neutral-medium: #AFAEAF; /* 1 - Cinza equilibrado para bordas ou textos secundários */
+    -fx-color-neutral-light: #F2F2F2; /* 5 - Fundo principal ou áreas de contraste limpo */
+    -fx-color-primary-deep: #01402E; /* 2 - Verde escuro para fundos de containers ou headers */
+    -fx-color-primary-main: #038C4C; /* 3 - Verde médio para botões ou estados normais */
+    -fx-color-primary-accent: #0DF205; /* 4 - Verde Neon para o degradê, foco e progresso */
+    -fx-color-primary-black: #010001; /* 5 - Quase Preto */
+    /* Escala Degradê*/
+    -fx-color-primary-vibrant: #01A959; /*O ponto de energia e destaque.*/
+    -fx-color-primary-forest: #095D4C; /*"A cor de transição, sóbria e técnica."*/
+    -fx-color-primary-void: #010001; /*O preto absoluto para profundidade.*/
     -fx-font-family: "Mark Pro", "System";
     -fx-font-size: 14px;
 }
 
-/** LABELS */
-Label{
+/*Degradê*/
+.gradient-tech-deep {
+    -fx-background-color: linear-gradient(to bottom right,
+    -fx-color-primary-vibrant,
+    -fx-color-primary-forest,
+    -fx-color-primary-void
+    );
+}
+
+Label {
     -fx-font-weight: bold;
-    -fx-text-fill: -fx-espresso-dark;
+    -fx-text-fill: -fx-color-primary-deep;
 }
