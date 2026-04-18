@@ -6,10 +6,10 @@
     -fx-color-primary-main: #038C4C; /* 3 - Verde médio para botões ou estados normais */
     -fx-color-primary-accent: #0DF205; /* 4 - Verde Neon para o degradê, foco e progresso */
     -fx-color-primary-black: #010001; /* 5 - Quase Preto */
+
     /* Escala Degradê*/
     -fx-color-primary-vibrant: #01A959; /*O ponto de energia e destaque.*/
     -fx-color-primary-forest: #095D4C; /*"A cor de transição, sóbria e técnica."*/
-    -fx-color-primary-void: #010001; /*O preto absoluto para profundidade.*/
     -fx-font-family: "Mark Pro", "System";
     -fx-font-size: 14px;
 }
@@ -19,11 +19,21 @@
     -fx-background-color: linear-gradient(to bottom right,
     -fx-color-primary-vibrant,
     -fx-color-primary-forest,
-    -fx-color-primary-void
+    -fx-color-primary-black
     );
 }
 
 Label {
     -fx-font-weight: bold;
     -fx-text-fill: -fx-color-primary-deep;
+}
+
+.tooltip {
+    -fx-background-color: -fx-color-neutral-medium;
+    -fx-text-fill: -fx-color-primary-deep;
+    -fx-background-radius: 5;
+    -fx-padding: 5;
+    -fx-border-color: -fx-color-primary-black;
+    -fx-border-width: 1;
+    -fx-border-radius: 10;
 }

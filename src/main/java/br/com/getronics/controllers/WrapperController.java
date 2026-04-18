@@ -55,6 +55,11 @@ public class WrapperController {
     }
 
     @FXML
+    void initBatchProcess(){
+        //TODO: continuar daqui...
+    }
+
+    @FXML
     void closeApplication() {
         final Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle("Sair do Sistema");

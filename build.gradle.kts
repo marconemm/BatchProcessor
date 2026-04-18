@@ -38,6 +38,10 @@ dependencies {
     implementation("org.kordamp.ikonli:ikonli-fontawesome5-pack:12.4.0")
     implementation("org.kordamp.ikonli:ikonli-fontawesome6-pack:12.4.0")
     implementation("org.kordamp.ikonli:ikonli-materialdesign-pack:12.4.0")
+    // POI:
+    implementation("org.apache.poi:poi-ooxml:5.5.1")
+    // FasterXML:
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.15.2")
 }
 
 tasks.test {
