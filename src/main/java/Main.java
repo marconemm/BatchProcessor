@@ -1,8 +1,10 @@
 import br.com.getronics.utils.enums.views.E_Fxml;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 
 import java.io.IOException;
@@ -11,6 +13,17 @@ import java.util.Objects;
 import static org.apache.logging.log4j.LogManager.getLogger;
 
 public class Main extends Application {
+    final Rectangle2D screenBounds;
+    final double minWidth;
+    final double minHeight;
+    final double sizeScale;
+
+    public Main() {
+        screenBounds = Screen.getPrimary().getBounds();
+        sizeScale = 0.7;
+        minWidth = screenBounds.getWidth() * sizeScale;
+        minHeight = screenBounds.getHeight() * sizeScale;
+    }
 
     @Override
     public void start(final Stage mainStage) throws IOException {
@@ -26,8 +39,8 @@ public class Main extends Application {
             scene.getStylesheets().add(cssPath);
             mainStage.setTitle("Gerador De Lançamentos Em Lote");
             mainStage.setScene(scene);
-            mainStage.setMinWidth(960);
-            mainStage.setMinHeight(540);
+            mainStage.setMinWidth(minWidth);
+            mainStage.setMinHeight(minHeight);
             mainStage.show();
         } catch (IOException ioe) {
             getLogger().error("start: {}", ioe.getLocalizedMessage());

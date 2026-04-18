@@ -1,18 +1,19 @@
 package br.com.getronics.controllers;
 
+import br.com.getronics.Model.WorkbookItem;
 import br.com.getronics.database.UserConfig;
 import br.com.getronics.utils.enums.E_Project;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
-import javafx.scene.control.Tooltip;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Window;
-import javafx.util.Duration;
 
 import java.io.File;
 import java.io.IOException;
@@ -26,9 +27,12 @@ public class HomeController {
     private final List<File> selectedFilesList;
     private final String CONFIG_FILE;
     private final String CONFIG_DIR;
+
     private File lastAcessedPath;
     private ObjectMapper mapper = new ObjectMapper();
 
+    @FXML
+    private ScrollPane spSelectedFiles;
     @FXML
     private VBox vBoxSelectedFiles; // O VBox que você acabou de criar no ScrollPane
 
@@ -72,17 +76,23 @@ public class HomeController {
 
         if (!selectedFilesList.isEmpty()) {
             for (File file : selectedFilesList) {
-                final Label lblArquivo = new Label(file.getName());
-                final Tooltip tooltip = new Tooltip(file.getAbsolutePath());
+                final WorkbookItem item = new WorkbookItem(file, (fielToRemove) -> {
 
-                tooltip.setShowDelay(Duration.millis(200));
-                lblArquivo.setTooltip(tooltip);
-                vBoxSelectedFiles.getChildren().add(lblArquivo);
+                    selectedFilesList.remove(fielToRemove.getFile());
+                    atualizarListaVisual();
+                    getLogger().info("atualizarListaVisual: Arquivo \"{}\" removido.",
+                            fielToRemove.getFile().getName()
+                    );
+                });
+
+                vBoxSelectedFiles.getChildren().add(item.getContainer());
             }
         } else {
             final Label lblArquivo = new Label("(Nenhuma planilha selecionada)");
             vBoxSelectedFiles.getChildren().add(lblArquivo);
         }
+
+        rolarParaDireita();
     }
 
     private void saveConfig(final String path) {
@@ -128,5 +138,15 @@ public class HomeController {
         }
 
         return System.getProperty("user.home"); // By default.
+    }
+
+    private void rolarParaDireita() {
+        spSelectedFiles.applyCss();
+        spSelectedFiles.layout();
+
+        Platform.runLater(() -> {
+            spSelectedFiles.setHvalue(1.0);
+            spSelectedFiles.setVvalue(1.0);
+        });
     }
 }

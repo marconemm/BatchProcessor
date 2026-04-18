@@ -5,10 +5,10 @@
     -fx-color-primary-deep: #01402E; /* 2 - Verde escuro para fundos de containers ou headers */
     -fx-color-primary-main: #038C4C; /* 3 - Verde médio para botões ou estados normais */
     -fx-color-primary-accent: #0DF205; /* 4 - Verde Neon para o degradê, foco e progresso */
-    -fx-color-primary-black: #010001; /* 5 - Quase Preto */
+    -fx-color-primary-black: #010001;
+    -fx-color-erro-red: #FF4444;
 
     /* Escala Degradê*/
-    -fx-color-primary-vibrant: #01A959; /*O ponto de energia e destaque.*/
     -fx-color-primary-forest: #095D4C; /*"A cor de transição, sóbria e técnica."*/
     -fx-font-family: "Mark Pro", "System";
     -fx-font-size: 14px;
@@ -17,10 +17,9 @@
 /*Degradê*/
 .gradient-tech-deep {
     -fx-background-color: linear-gradient(to bottom right,
-    -fx-color-primary-vibrant,
-    -fx-color-primary-forest,
-    -fx-color-primary-black
-    );
+    -fx-color-primary-main,
+    -fx-color-primary-main,
+    -fx-color-primary-black    );
 }
 
 Label {
@@ -37,3 +36,24 @@ Label {
     -fx-border-width: 1;
     -fx-border-radius: 10;
 }
+
+.workbook_item {
+    -fx-border-color: -fx-color-neutral-medium;
+    -fx-border-width: 0 0 2 0;
+    -fx-background-color: transparent;
+}
+
+/* .workbook_item .workbook_item-label {
+    -fx-text-fill: -fx-color-neutral-medium;
+}
+
+.workbook_item .workbook_item-label:hover {
+    -fx-text-fill: -fx-color-primary-black;
+    -fx-font-weight: bold;
+}
+
+.workbook_item:hover {
+    -fx-border-color: -fx-color-neutral-medium;
+    -fx-border-width: 0 0 1 0;
+    -fx-background-color: -fx-color-primary-main;
+} */
