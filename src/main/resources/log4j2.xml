@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration status="WARN">
     <Properties>
-        <Property name="basePath">logs</Property>
+        <Property name="logFilename">log</Property>
+        <Property name="devPath">Logs</Property>
+        <Property name="logPath">${sys:user.home}/.GetronicsExcel/Logs</Property>
     </Properties>
 
     <Appenders>
@@ -10,9 +12,23 @@
             <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
         </Console>
 
-        <RollingFile name="RollingFile"
-                     fileName="${basePath}/binance-bot.log"
-                     filePattern="${basePath}/binance-bot-%d{yyyy-MM-dd}-%i.log.gz">
+        <RollingFile name="DeveloperEnv"
+                     fileName="${devPath}/${logFilename}.log"
+                     filePattern="${devPath}/${logFilename}-%d{yyyy-MM-dd}-%i.log.gz">
+            <ThresholdFilter level="DEBUG" onMatch="ACCEPT" onMismatch="DENY"/>
+            <PatternLayout>
+                <Pattern>%d{yyyy-MM-dd HH:mm:ss} [%t] %-5level %logger{36} - %msg%n</Pattern>
+            </PatternLayout>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+                <SizeBasedTriggeringPolicy size="2MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="5"/>
+        </RollingFile>
+
+        <RollingFile name="ProductionEnv"
+                     fileName="${logPath}/${logFilename}.log"
+                     filePattern="${logPath}/${logFilename}-%d{yyyy-MM-dd}-%i.log.gz">
             <ThresholdFilter level="INFO" onMatch="ACCEPT" onMismatch="DENY"/>
             <PatternLayout>
                 <Pattern>%d{yyyy-MM-dd HH:mm:ss} [%t] %-5level %logger{36} - %msg%n</Pattern>
@@ -26,15 +42,10 @@
     </Appenders>
 
     <Loggers>
-        <!-- Reduce the MongoDB log to WARN or above:-->
-        <Logger name="org.mongodb.driver" level="WARN" additivity="false">
+        <Root level="DEBUG">
             <AppenderRef ref="Console"/>
-            <AppenderRef ref="RollingFile"/>
-        </Logger>
-
-        <Root level="info">
-            <AppenderRef ref="Console"/>
-            <AppenderRef ref="RollingFile"/>
+            <AppenderRef ref="DeveloperEnv"/>
+            <AppenderRef ref="ProductionEnv"/>
         </Root>
     </Loggers>
 </Configuration>
