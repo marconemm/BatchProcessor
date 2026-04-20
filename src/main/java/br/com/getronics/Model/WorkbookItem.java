@@ -36,8 +36,8 @@ public class WorkbookItem {
         final FontIcon trashIcon;
 
         //Icon:
-        trashIcon = new FontIcon("fas-trash-alt");
-        trashIcon.setIconSize(18);
+        trashIcon = new FontIcon("far-trash-alt");
+        trashIcon.setIconSize(20);
         trashIcon.setIconColor(NEUTRAL_MEDIUM.getColor());
 
         // Hbox:
