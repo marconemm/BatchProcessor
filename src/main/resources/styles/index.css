@@ -19,7 +19,7 @@
     -fx-background-color: linear-gradient(to bottom right,
     -fx-color-primary-main,
     -fx-color-primary-main,
-    -fx-color-primary-black    );
+    -fx-color-primary-black);
 }
 
 Label {
@@ -43,17 +43,29 @@ Label {
     -fx-background-color: transparent;
 }
 
-/* .workbook_item .workbook_item-label {
-    -fx-text-fill: -fx-color-neutral-medium;
+/* O fundo (pista) da barra */
+.progress-bar > .track {
+    -fx-background-color: -fx-color-primary-deep; /* Fundo bem preto */
+    -fx-background-radius: 5;
+    -fx-background-insets: 0;
+    -fx-border-color: -fx-color-primary-black; /* Borda cinza escuro */
+    -fx-border-radius: 5;
+    -fx-border-width: 1;
+    -fx-effect: innershadow(three-pass-box, rgba(0, 0, 0, 0.7), 5, 0, 0, 1);
 }
 
-.workbook_item .workbook_item-label:hover {
-    -fx-text-fill: -fx-color-primary-black;
-    -fx-font-weight: bold;
+.progress-bar > .bar {
+    -fx-background-radius: 5;
+    -fx-background-insets: 4;
+    -fx-background-color: linear-gradient(
+            to bottom,
+            -fx-color-primary-accent 0%,
+            -fx-color-primary-main 100%
+    );
+
+    -fx-effect: dropshadow(three-pass-box, rgba(13, 242, 5, 0.4), 10, 0, 0, 0);
 }
 
-.workbook_item:hover {
-    -fx-border-color: -fx-color-neutral-medium;
-    -fx-border-width: 0 0 1 0;
-    -fx-background-color: -fx-color-primary-main;
-} */
+.progress-bar:determinate > .bar {
+    -fx-transition: 2s;
+}

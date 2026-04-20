@@ -1,7 +1,7 @@
 package br.com.getronics.controllers;
 
 import br.com.getronics.Model.WorkbookItem;
-import br.com.getronics.database.UserConfig;
+import br.com.getronics.database.Configs;
 import br.com.getronics.utils.enums.E_Project;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
@@ -12,11 +12,14 @@ import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Window;
+import org.kordamp.ikonli.javafx.FontIcon;
 import tools.jackson.databind.ObjectMapper;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,7 +29,12 @@ public class HomeController {
     private final List<File> selectedWorkBooksList;
     private final String CONFIG_FILE;
     private final ObjectMapper mapper = new ObjectMapper();
+    private final Configs savedConfigs;
+
     private File lastAccessedPath;
+
+    @FXML
+    private TextField inputTextOutputDir;
     @FXML
     private ScrollPane spWorkBooks;
     @FXML
@@ -37,19 +45,25 @@ public class HomeController {
     private ProgressBar pbWorkBooks;
     @FXML
     private Label lblProgressBar;
+    @FXML
+    private FontIcon fiPickOutputDir;
 
     public HomeController() {
         final String CONFIG_DIR = Paths.get(System.getProperty("user.home"),
                 "." + E_Project.PROJECT_NAME.getValue()).toString();
-
         selectedWorkBooksList = new ArrayList<>();
         CONFIG_FILE = Paths.get(CONFIG_DIR,
                 "." + E_Project.PROJECT_NAME.getValue() + "_config.json").toString();
-        lastAccessedPath = new File(loadConfig());
+        savedConfigs = loadConfig();
+
+        lastAccessedPath = new File(savedConfigs.getLastWorkBooksDir());
     }
 
-    @FXML
-    private void selectWorkBooks(ActionEvent e) {
+    public void initialize() {
+        inputTextOutputDir.setText(savedConfigs.getLastOutPutDir());
+    }
+
+    public void selectWorkBooks(ActionEvent e) {
         final FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Selecionar Planilhas");
 
@@ -66,42 +80,21 @@ public class HomeController {
         final List<File> files = fileChooser.showOpenMultipleDialog(parentWindow);
 
         if (files != null && !files.isEmpty()) {
+            final Configs configs = new Configs();
+
             lastAccessedPath = files.getFirst().getParentFile();
             selectedWorkBooksList.clear();
             lblProgressBar.setVisible(false);
             pbWorkBooks.setProgress(0);
             selectedWorkBooksList.addAll(files);
-            saveConfig(lastAccessedPath.getPath());
+            configs.setLastWorkBooksDir(lastAccessedPath.getPath());
+            saveConfig(configs);
             updateListView();
+            btnStart.setDisable(false);
         }
     }
 
-    private void updateListView() {
-        vBoxSelectedFiles.getChildren().clear();
-
-        if (!selectedWorkBooksList.isEmpty()) {
-            for (File file : selectedWorkBooksList) {
-                final WorkbookItem item = new WorkbookItem(file, (fielToRemove) -> {
-
-                    selectedWorkBooksList.remove(fielToRemove.getFile());
-                    updateListView();
-                    getLogger().info("atualizarListaVisual: Arquivo \"{}\" removido.",
-                            fielToRemove.getFile().getName()
-                    );
-                });
-
-                vBoxSelectedFiles.getChildren().add(item.getContainer());
-            }
-        } else {
-            final Label lblArquivo = new Label("(Nenhuma planilha selecionada)");
-            vBoxSelectedFiles.getChildren().add(lblArquivo);
-        }
-
-        rolarParaDireita();
-    }
-
-    @FXML
-    private void startProcess() {
+    public void startProcess() {
         // 1. To avoid double clicks:
         btnStart.setDisable(true);
         pbWorkBooks.setProgress(0);
@@ -135,7 +128,7 @@ public class HomeController {
         lblProgressBar.textProperty().bind(processTask.messageProperty());
 
         // 4. On finish:
-        processTask.setOnSucceeded(e -> {
+        processTask.setOnSucceeded(_ -> {
             getLogger().info("Processamento concluído com sucesso!");
             btnStart.setDisable(false);
             lblProgressBar.textProperty().unbind();
@@ -143,7 +136,7 @@ public class HomeController {
             pbWorkBooks.progressProperty().unbind();
         });
 
-        processTask.setOnFailed(e -> {
+        processTask.setOnFailed(_ -> {
             addLog("");
             btnStart.setDisable(false);
             Throwable ex = processTask.getException();
@@ -158,29 +151,100 @@ public class HomeController {
         thread.start();
     }
 
-    private void saveConfig(final String path) {
-        final UserConfig config = new UserConfig();
+    public void selectOutputDir(ActionEvent e) {
+        final FileChooser fileChooser = new FileChooser();
+        final LocalDateTime now = LocalDateTime.now();
+        final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss");
+        final String txt = String.format("%s_%s_lotes.txt", E_Project.PROJECT_NAME.getValue(), now.format(formatter));
+        final File currFile = new File(inputTextOutputDir.getText());
+        final Configs configs = new Configs();
 
-        config.setLastDirectory(path);
-        mapper.writeValue(new File(CONFIG_FILE), config);
+        fileChooser.setTitle("Definir Arquivo de Saída");
+        // 1-) Only *.txt:
+        fileChooser.getExtensionFilters().add(
+                new FileChooser.ExtensionFilter("Arquivos de Texto (*.txt)", "*.txt")
+        );
+        // 2-) Suggest a filename:
+        fileChooser.setInitialFileName(txt);
+
+        if (currFile.getParentFile() != null && currFile.getParentFile().exists()) {
+            fileChooser.setInitialDirectory(currFile.getParentFile());
+        }
+
+        final File finalFile = fileChooser.showSaveDialog(inputTextOutputDir.getScene().getWindow());
+
+        // 3-) Make sure that the finalFile ends with *.txt:
+        if (finalFile != null) {
+            String path = finalFile.getAbsolutePath();
+
+            if (!path.toLowerCase().endsWith(".txt")) {
+                path += ".txt";
+            }
+
+            inputTextOutputDir.setText(path);
+
+            // 4-) Save the config:
+            configs.setLastOutPutDir(path);
+            saveConfig(configs);
+
+            //5-) Update the FontIcon:
+            fiPickOutputDir.setIconLiteral("far-folder-open");
+
+        }
     }
 
-    private String loadConfig() {
+    private void updateListView() {
+        vBoxSelectedFiles.getChildren().clear();
+
+        if (!selectedWorkBooksList.isEmpty()) {
+            for (File file : selectedWorkBooksList) {
+                final WorkbookItem item = new WorkbookItem(file, (fielToRemove) -> {
+
+                    selectedWorkBooksList.remove(fielToRemove.getFile());
+
+                    if (selectedWorkBooksList.isEmpty()) {
+                        btnStart.setDisable(true);
+                    }
+
+                    updateListView();
+                    getLogger().info("atualizarListaVisual: Arquivo \"{}\" removido.",
+                            fielToRemove.getFile().getName()
+                    );
+                });
+
+                vBoxSelectedFiles.getChildren().add(item.getContainer());
+            }
+        } else {
+            final Label lblArquivo = new Label("(Nenhuma planilha selecionada)");
+            vBoxSelectedFiles.getChildren().add(lblArquivo);
+        }
+
+        rolarParaDireita();
+    }
+
+    private void saveConfig(final Configs configs) {
+        final Configs currentConfig = loadConfig();
+        final Configs updatedConfig = currentConfig.update(configs);
+        final File configFile = new File(CONFIG_FILE);
+
+        mapper.writerWithDefaultPrettyPrinter().writeValue(configFile, updatedConfig);
+
+    }
+
+    private Configs loadConfig() {
         try {
-            final File file = new File(CONFIG_FILE);
-            final File parentFile = file.getParentFile();
+            final File configFile = new File(CONFIG_FILE);
+            final File parentFile = configFile.getParentFile();
 
             if (parentFile != null && !parentFile.exists()) {
-                // mkdirs with 's' to create all the file tree:
+                // mkdirs with 's' to create all the configFile tree:
                 if (!parentFile.mkdirs()) {
                     throw new IOException(String.format("Não foi possível criar a \"%s\"", parentFile.getPath()));
                 }
             }
 
-            if (file.exists()) {
-                final UserConfig config = mapper.readValue(file, UserConfig.class);
-
-                return config.getLastDirectory();
+            if (configFile.exists()) {
+                return mapper.readValue(configFile, Configs.class);
             }
         } catch (IOException ioe) {
             final Alert alert = new Alert(Alert.AlertType.ERROR);
@@ -191,7 +255,7 @@ public class HomeController {
             alert.show();
         }
 
-        return System.getProperty("user.home"); // By default.
+        return new Configs(); // By default.
     }
 
     private void rolarParaDireita() {
@@ -205,14 +269,11 @@ public class HomeController {
     }
 
     private void processarPlanilha(final File arquivo) {
-        System.out.println(arquivo.getName() + "Processado...");
+        addLog(arquivo.getName() + " - Processado.");
     }
 
     private void addLog(final String msg) {
+        System.out.println(msg);
         //TODO: Adicionar logs (interface), aqui...
-    }
-
-    public void selectOutputDir(ActionEvent e) {
-        //TODO: Selecionar o caminho de destino dos logs aqui...
     }
 }
