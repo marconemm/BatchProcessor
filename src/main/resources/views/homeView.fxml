@@ -41,8 +41,17 @@
         <ProgressBar fx:id="pbWorkBooks" layoutY="236.0" prefHeight="25.0" progress="0.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" />
         <Label fx:id="lblProgressBar" layoutX="578.0" layoutY="261.0" text="Análise(s): X/Y" visible="false" AnchorPane.leftAnchor="578.0" />
         <Label layoutY="307.0" text="Selecionar Arquivo de Saída" />
-        <Group layoutX="14.0" layoutY="348.0" AnchorPane.leftAnchor="0.0">
-            <FontIcon fx:id="fiPickOutputDir" iconLiteral="far-folder" iconSize="20" layoutY="20.0" wrappingWidth="20.0" />
+        <Group layoutY="330.0" AnchorPane.leftAnchor="10.0">
+            <FontIcon fx:id="fiPickOutputDir" iconLiteral="far-folder" iconSize="20" layoutY="20.0" wrappingWidth="20.0" x="10.0" />
+           <TextField fx:id="inputTextOutputFile" layoutX="40.0" prefHeight="30.0" prefWidth="600.0" text="&lt;Selecionar Pasta&gt;" />
+           <Button layoutX="650.0" mnemonicParsing="false" onAction="#selectOutputDir" prefHeight="30.0" text="Selecionar...">
+               <cursor>
+                   <Cursor fx:constant="HAND" />
+               </cursor>
+               <effect>
+                   <Glow />
+               </effect>
+           </Button>
         </Group>
         <Button fx:id="btnStart" alignment="BOTTOM_CENTER" disable="true" layoutX="530.0" layoutY="396.0" mnemonicParsing="false" onAction="#startProcess" prefWidth="200.0" text="Processar" AnchorPane.leftAnchor="530.0">
             <cursor>
@@ -52,7 +61,7 @@
                 <Glow />
             </effect>
         </Button>
-      <Separator layoutX="10.0" layoutY="445.0" prefHeight="6.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" />
+        <Separator layoutX="10.0" layoutY="445.0" prefHeight="6.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" />
         <Label layoutX="13.0" layoutY="460.0" text="Log de Análise / Erros:" AnchorPane.leftAnchor="0.0" AnchorPane.topAnchor="460.0" />
         <ScrollPane layoutX="13.0" layoutY="496.0" AnchorPane.bottomAnchor="10.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="495.0">
             <VBox fx:id="vbLog" fillWidth="false" spacing="5.0">
@@ -61,15 +70,6 @@
                 </padding>
             </VBox>
         </ScrollPane>
-      <TextField fx:id="inputTextOutputDir" layoutX="28.0" layoutY="345.0" prefHeight="30.0" prefWidth="600.0" text="&lt;Selecionar Pasta&gt;" />
-         <Button fx:id="btnPickOutputDir" layoutX="645.0" layoutY="345.0" mnemonicParsing="false" onAction="#selectOutputDir" prefHeight="30.0" text="Selecionar...">
-             <cursor>
-                 <Cursor fx:constant="HAND" />
-             </cursor>
-             <effect>
-                 <Glow />
-             </effect>
-         </Button>
     </AnchorPane>
     <padding>
         <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />

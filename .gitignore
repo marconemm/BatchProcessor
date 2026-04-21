@@ -5,6 +5,7 @@
 # Segredos e Configurações Locais
 src/main/resources/config.properties
 *.log
+Logs/*
 logs/*
 
 # IDEs

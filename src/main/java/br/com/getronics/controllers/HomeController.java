@@ -2,7 +2,7 @@ package br.com.getronics.controllers;
 
 import br.com.getronics.Model.WorkbookItem;
 import br.com.getronics.database.Configs;
-import br.com.getronics.utils.enums.E_Project;
+import br.com.getronics.utils.enums.styles.E_Colors;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
@@ -13,13 +13,8 @@ import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Window;
 import org.kordamp.ikonli.javafx.FontIcon;
-import tools.jackson.databind.ObjectMapper;
 
 import java.io.File;
-import java.io.IOException;
-import java.nio.file.Paths;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,14 +22,10 @@ import static org.apache.logging.log4j.LogManager.getLogger;
 
 public class HomeController {
     private final List<File> selectedWorkBooksList;
-    private final String CONFIG_FILE;
-    private final ObjectMapper mapper = new ObjectMapper();
     private final Configs savedConfigs;
 
-    private File lastAccessedPath;
-
     @FXML
-    private TextField inputTextOutputDir;
+    private TextField inputTextOutputFile;
     @FXML
     private ScrollPane spWorkBooks;
     @FXML
@@ -49,18 +40,19 @@ public class HomeController {
     private FontIcon fiPickOutputDir;
 
     public HomeController() {
-        final String CONFIG_DIR = Paths.get(System.getProperty("user.home"),
-                "." + E_Project.PROJECT_NAME.getValue()).toString();
         selectedWorkBooksList = new ArrayList<>();
-        CONFIG_FILE = Paths.get(CONFIG_DIR,
-                "." + E_Project.PROJECT_NAME.getValue() + "_config.json").toString();
-        savedConfigs = loadConfig();
-
-        lastAccessedPath = new File(savedConfigs.getLastWorkBooksDir());
+        savedConfigs = new Configs();
+        savedConfigs.fetchData();
     }
 
     public void initialize() {
-        inputTextOutputDir.setText(savedConfigs.getLastOutPutDir());
+        inputTextOutputFile.setText(savedConfigs.getLastOutPutDir());
+        inputTextOutputFile.textProperty().addListener(
+                (_, oldValue, newValue) -> {
+                    updateOutputDir();
+                    getLogger().debug("inputTextOutputFile Listener: " +
+                            "O texto mudou de: \"{}\" para: \"{}\"", oldValue, newValue);
+                });
     }
 
     public void selectWorkBooks(ActionEvent e) {
@@ -71,24 +63,19 @@ public class HomeController {
         fileChooser.getExtensionFilters().add(
                 new FileChooser.ExtensionFilter("Arquivos Excel", "*.xlsx", "*.xls")
         );
-
-        if (lastAccessedPath != null && lastAccessedPath.exists()) {
-            fileChooser.setInitialDirectory(lastAccessedPath);
-        }
+        fileChooser.setInitialDirectory(new File(savedConfigs.getLastWorkBooksDir()));
 
         final Window parentWindow = ((Node) e.getSource()).getScene().getWindow();
         final List<File> files = fileChooser.showOpenMultipleDialog(parentWindow);
 
         if (files != null && !files.isEmpty()) {
-            final Configs configs = new Configs();
-
-            lastAccessedPath = files.getFirst().getParentFile();
+            savedConfigs.setLastWorkBooksDir(files.getFirst().getParent());
+            savedConfigs.update();
             selectedWorkBooksList.clear();
             lblProgressBar.setVisible(false);
             pbWorkBooks.setProgress(0);
             selectedWorkBooksList.addAll(files);
-            configs.setLastWorkBooksDir(lastAccessedPath.getPath());
-            saveConfig(configs);
+
             updateListView();
             btnStart.setDisable(false);
         }
@@ -151,13 +138,11 @@ public class HomeController {
         thread.start();
     }
 
-    public void selectOutputDir(ActionEvent e) {
+    public void selectOutputDir() {
         final FileChooser fileChooser = new FileChooser();
-        final LocalDateTime now = LocalDateTime.now();
-        final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss");
-        final String txt = String.format("%s_%s_lotes.txt", E_Project.PROJECT_NAME.getValue(), now.format(formatter));
-        final File currFile = new File(inputTextOutputDir.getText());
-        final Configs configs = new Configs();
+        final File currFile = new File(inputTextOutputFile.getText());
+        final Configs newConfigs = new Configs();
+        newConfigs.fetchData();
 
         fileChooser.setTitle("Definir Arquivo de Saída");
         // 1-) Only *.txt:
@@ -165,31 +150,52 @@ public class HomeController {
                 new FileChooser.ExtensionFilter("Arquivos de Texto (*.txt)", "*.txt")
         );
         // 2-) Suggest a filename:
-        fileChooser.setInitialFileName(txt);
+        fileChooser.setInitialFileName(newConfigs.getInitialFileName());
 
-        if (currFile.getParentFile() != null && currFile.getParentFile().exists()) {
+        if (currFile.exists()) {
+            fileChooser.setInitialDirectory(currFile);
+        } else if (currFile.getParentFile().exists()) {
             fileChooser.setInitialDirectory(currFile.getParentFile());
         }
 
-        final File finalFile = fileChooser.showSaveDialog(inputTextOutputDir.getScene().getWindow());
+        final File finalFile = fileChooser.showSaveDialog(inputTextOutputFile.getScene().getWindow());
 
-        // 3-) Make sure that the finalFile ends with *.txt:
+        // 3-) Save the config:
         if (finalFile != null) {
-            String path = finalFile.getAbsolutePath();
+            newConfigs.setLastFileName(finalFile.getName());
+            newConfigs.setLastOutputDir(finalFile.getParent());
 
-            if (!path.toLowerCase().endsWith(".txt")) {
-                path += ".txt";
+            inputTextOutputFile.setText(newConfigs.getLastOutputFile());
+            savedConfigs.update(newConfigs);
+
+            //4-) Update the FontIcon:
+            fiPickOutputDir.setIconLiteral("far-folder-open");
+        }
+    }
+
+    private void updateOutputDir() {
+        final String txt = inputTextOutputFile.getText();
+        final File currFile = new File(txt);
+
+        // 1-) Validate:
+        if (txt.endsWith(".txt")) {
+            // 2-) Update the config:
+            if (currFile.exists()) {
+                savedConfigs.setLastOutputDir(txt);
+                savedConfigs.setLastFileName(txt);
+            } else if (currFile.getParentFile().exists()) {
+                savedConfigs.setLastOutputDir(currFile.getParent());
+                savedConfigs.setLastFileName(currFile.getName());
             }
 
-            inputTextOutputDir.setText(path);
+            // 3-) Save the config:
+            inputTextOutputFile.setStyle(" -fx-border-width: 2;" + "-fx-border-color: "
+                    + E_Colors.PRIMARY_ACCENT.getHex());
+            savedConfigs.update();
 
-            // 4-) Save the config:
-            configs.setLastOutPutDir(path);
-            saveConfig(configs);
-
-            //5-) Update the FontIcon:
-            fiPickOutputDir.setIconLiteral("far-folder-open");
-
+        } else {
+            inputTextOutputFile.setStyle(
+                    " -fx-border-width: 2;" + "-fx-border-color: " + E_Colors.ERROR_RED.getHex());
         }
     }
 
@@ -220,42 +226,6 @@ public class HomeController {
         }
 
         rolarParaDireita();
-    }
-
-    private void saveConfig(final Configs configs) {
-        final Configs currentConfig = loadConfig();
-        final Configs updatedConfig = currentConfig.update(configs);
-        final File configFile = new File(CONFIG_FILE);
-
-        mapper.writerWithDefaultPrettyPrinter().writeValue(configFile, updatedConfig);
-
-    }
-
-    private Configs loadConfig() {
-        try {
-            final File configFile = new File(CONFIG_FILE);
-            final File parentFile = configFile.getParentFile();
-
-            if (parentFile != null && !parentFile.exists()) {
-                // mkdirs with 's' to create all the configFile tree:
-                if (!parentFile.mkdirs()) {
-                    throw new IOException(String.format("Não foi possível criar a \"%s\"", parentFile.getPath()));
-                }
-            }
-
-            if (configFile.exists()) {
-                return mapper.readValue(configFile, Configs.class);
-            }
-        } catch (IOException ioe) {
-            final Alert alert = new Alert(Alert.AlertType.ERROR);
-
-            getLogger().error("loadConfig: {}", ioe.getLocalizedMessage());
-            alert.setTitle("Erro");
-            alert.setHeaderText(ioe.getLocalizedMessage());
-            alert.show();
-        }
-
-        return new Configs(); // By default.
     }
 
     private void rolarParaDireita() {
