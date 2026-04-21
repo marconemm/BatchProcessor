@@ -1,8 +1,10 @@
 package br.com.getronics.controllers;
 
 import br.com.getronics.database.Configs;
+import br.com.getronics.models.LogItem;
 import br.com.getronics.models.WorkbookItem;
 import br.com.getronics.models.interfaces.Shutdownable;
+import br.com.getronics.utils.enums.E_LogType;
 import br.com.getronics.utils.enums.styles.E_Colors;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
@@ -40,6 +42,10 @@ public class HomeController implements Shutdownable {
     private Label lblProgressBar;
     @FXML
     private FontIcon fiPickOutputDir;
+    @FXML
+    private ScrollPane spLogs;
+    @FXML
+    private VBox vbLog;
 
     public HomeController() {
         selectedWorkBooksList = new ArrayList<>();
@@ -123,7 +129,8 @@ public class HomeController implements Shutdownable {
 
         // 4. On finish:
         processTask.setOnSucceeded(_ -> {
-            getLogger().info("Processamento concluído com sucesso!");
+            addLog("teste de sucesso.", E_LogType.SUCCESS);
+            getLogger().info("processTaskSucess(): Processamento concluído com sucesso!");
             btnStart.setDisable(false);
             lblProgressBar.textProperty().unbind();
             lblProgressBar.setText("Concluído!");
@@ -131,7 +138,7 @@ public class HomeController implements Shutdownable {
         });
 
         processTask.setOnFailed(_ -> {
-            addLog("");
+            addLog("teste de falha.", E_LogType.ERROR);
             btnStart.setDisable(false);
             Throwable ex = processTask.getException();
             getLogger().error("processTaskFailed(): Falha no processamento.");
@@ -254,11 +261,18 @@ public class HomeController implements Shutdownable {
     }
 
     private void processarPlanilha(final File arquivo) {
-        addLog(arquivo.getName() + " - Processado.");
+        addLog(arquivo.getName() + " - Processado.", E_LogType.INFO);
     }
 
-    private void addLog(final String msg) {
-        System.out.println(msg);
-        //TODO: Adicionar logs (interface), aqui...
+    private void addLog(final String msg, final E_LogType logType) {
+        Platform.runLater(() -> {
+            final LogItem log = new LogItem(msg, logType);
+
+            vbLog.getChildren().add(log.getContainer());
+            vbLog.applyCss();
+            vbLog.layout();
+            spLogs.setHvalue(1.0);
+            spLogs.setVvalue(1.0);
+        });
     }
 }

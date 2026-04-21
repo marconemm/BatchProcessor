@@ -1,3 +1,18 @@
+@font-face {
+    font-family: 'Mark Pro';
+    src: url('Fonts/Mark_Pro/Mark_Pro.ttf');
+}
+
+@font-face {
+    font-family: 'Mark Pro Medium';
+    src: url('Fonts/Mark_Pro/Mark_Pro_Medium.ttf');
+}
+
+@font-face {
+    font-family: 'Mark Pro Heavy';
+    src: url('Fonts/Mark_Pro/Mark_Pro_Heavy.ttf');
+}
+
 .root {
     /* Escala Getronics / Tech Green */
     -fx-color-neutral-medium: #AFAEAF; /* 1 - Cinza equilibrado para bordas ou textos secundários */
@@ -10,7 +25,7 @@
 
     /* Escala Degradê*/
     -fx-color-primary-forest: #095D4C; /*"A cor de transição, sóbria e técnica."*/
-    -fx-font-family: "Mark Pro", "System";
+    -fx-font-family: "Mark Pro Medium", "System";
     -fx-font-size: 14px;
 }
 
