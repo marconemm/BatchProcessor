@@ -1,5 +1,6 @@
 package br.com.getronics.controllers;
 
+import br.com.getronics.models.interfaces.Shutdownable;
 import br.com.getronics.utils.enums.views.E_Fxml;
 import br.com.getronics.utils.enums.views.E_windowLayout;
 import javafx.application.Platform;
@@ -7,9 +8,6 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
-import javafx.scene.control.Alert;
-import javafx.scene.control.ButtonBar;
-import javafx.scene.control.ButtonType;
 import javafx.scene.layout.BorderPane;
 
 import java.io.IOException;
@@ -17,11 +15,28 @@ import java.io.IOException;
 import static org.apache.logging.log4j.LogManager.getLogger;
 
 public class WrapperController {
+    private Shutdownable currentController;
+
     @FXML
     private BorderPane mainPane;
 
+    public WrapperController() {
+        this.currentController = null;
+    }
+
+    public void closeApplication() {
+        if (new BaseController().isToCloseApplication()) {
+            Platform.exit();
+            System.exit(0);
+        }
+    }
+
+    public Shutdownable getCurrentController() {
+        return currentController;
+    }
+
     @FXML
-    public void initialize() {
+    private void initialize() {
         openNewWindow(E_Fxml.HOME, E_windowLayout.CENTER_FULL);
     }
 
@@ -33,6 +48,7 @@ public class WrapperController {
             );
             final Parent newWindow = loader.load();
 
+            currentController = loader.getController();
             mainPane.setCenter(newWindow);
             setLayout(layout);
         } catch (NullPointerException npe) {
@@ -45,36 +61,18 @@ public class WrapperController {
     }
 
     @FXML
-    void openHomeView() {
+    private void openHomeView() {
         openNewWindow(E_Fxml.HOME, E_windowLayout.CENTER_FULL);
     }
 
     @FXML
-    void openAboutWindow() {
+    private void openAboutWindow() {
         openNewWindow(E_Fxml.ABOUT, E_windowLayout.CENTER_RIGHT_BOTTOM);
     }
 
     @FXML
-    void initBatchProcess(){
+    private void initBatchProcess() {
         //TODO: continuar daqui...
-    }
-
-    @FXML
-    void closeApplication() {
-        final Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle("Sair do Sistema");
-        alert.setHeaderText("Deseja realmente fechar o programa?");
-
-        final ButtonType btnSim = new ButtonType("Sim");
-        final ButtonType btnNao = new ButtonType("Não", ButtonBar.ButtonData.CANCEL_CLOSE);
-
-        alert.getButtonTypes().setAll(btnSim, btnNao);
-        alert.showAndWait().ifPresent(response -> {
-            if (response == btnSim) {
-                Platform.exit();
-                System.exit(0);
-            }
-        });
     }
 
     private void setLayout(final E_windowLayout layout) {

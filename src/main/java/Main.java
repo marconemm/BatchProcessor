@@ -1,5 +1,9 @@
+import br.com.getronics.controllers.BaseController;
+import br.com.getronics.controllers.WrapperController;
+import br.com.getronics.models.interfaces.Shutdownable;
 import br.com.getronics.utils.enums.views.E_Fxml;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Parent;
@@ -41,6 +45,23 @@ public class Main extends Application {
             mainStage.setScene(scene);
             mainStage.setMinWidth(minWidth);
             mainStage.setMinHeight(minHeight);
+            mainStage.setOnCloseRequest(wEvent -> {
+                final BaseController baseController = new BaseController();
+                final boolean isToClose = baseController.isToCloseApplication();
+
+                if (isToClose) {
+                    final WrapperController wrapperController = loader.getController();
+                    final Shutdownable content = wrapperController.getCurrentController();
+
+                    getLogger().info("start(): fechando a aplicação...");
+                    baseController.stopApplication(content);
+                    Platform.exit();
+                    System.exit(0);
+                } else {
+                    // 1-) Stops the window event propagation:
+                    wEvent.consume();
+                }
+            });
             mainStage.show();
         } catch (IOException ioe) {
             getLogger().error("start: {}", ioe.getLocalizedMessage());

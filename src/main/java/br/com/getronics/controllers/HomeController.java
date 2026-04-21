@@ -1,7 +1,8 @@
 package br.com.getronics.controllers;
 
-import br.com.getronics.Model.WorkbookItem;
 import br.com.getronics.database.Configs;
+import br.com.getronics.models.WorkbookItem;
+import br.com.getronics.models.interfaces.Shutdownable;
 import br.com.getronics.utils.enums.styles.E_Colors;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
@@ -20,9 +21,10 @@ import java.util.List;
 
 import static org.apache.logging.log4j.LogManager.getLogger;
 
-public class HomeController {
+public class HomeController implements Shutdownable {
     private final List<File> selectedWorkBooksList;
     private final Configs savedConfigs;
+    private Task<Void> processTask;
 
     @FXML
     private TextField inputTextOutputFile;
@@ -89,12 +91,17 @@ public class HomeController {
         getLogger().info("Iniciando processamento das planilhas...");
 
         // 2. Process task:
-        final Task<Void> processTask = new Task<>() {
+        processTask = new Task<>() {
             @Override
             protected Void call() throws Exception {
                 final int total = selectedWorkBooksList.size();
 
                 for (int i = 0; i < total; i++) {
+                    if (isCancelled()) {
+                        getLogger().debug("startProcess(): processamento interrompido pelo usuário.");
+                        break;
+                    }
+
                     final File selectedWorkBook = selectedWorkBooksList.get(i);
                     final int atual = i + 1;
 
@@ -131,11 +138,19 @@ public class HomeController {
             getLogger().error("processTaskFailed(): {}", ex.getMessage());
         });
 
-        // 5. Rodar em uma Thread separada
+        // 5. Run the task in a aside Thread:
         final Thread thread = new Thread(processTask);
 
         thread.setDaemon(true); // To kill the thread if the app closes.
         thread.start();
+    }
+
+    @Override
+    public void stop() {
+        if (processTask != null && processTask.isRunning()) {
+            getLogger().info("stop(): Cancelando Task \"{}\"", processTask.getTitle());
+            processTask.cancel();
+        }
     }
 
     public void selectOutputDir() {
