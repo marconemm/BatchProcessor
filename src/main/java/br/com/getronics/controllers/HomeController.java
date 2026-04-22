@@ -45,7 +45,7 @@ public class HomeController implements Shutdownable {
     @FXML
     private ScrollPane spLogs;
     @FXML
-    private VBox vbLog;
+    private VBox vBoxLog;
 
     public HomeController() {
         selectedWorkBooksList = new ArrayList<>();
@@ -86,6 +86,10 @@ public class HomeController implements Shutdownable {
 
             updateListView();
             btnStart.setDisable(false);
+        }
+
+        if (!vBoxLog.getChildren().isEmpty()) {
+            vBoxLog.getChildren().clear();
         }
     }
 
@@ -129,8 +133,8 @@ public class HomeController implements Shutdownable {
 
         // 4. On finish:
         processTask.setOnSucceeded(_ -> {
-            addLog("teste de sucesso.", E_LogType.SUCCESS);
-            getLogger().info("processTaskSucess(): Processamento concluído com sucesso!");
+            addLog("Fim dos processamentos.", E_LogType.INFO);
+            getLogger().info("processTaskSucess(): Fim dos processamentos.");
             btnStart.setDisable(false);
             lblProgressBar.textProperty().unbind();
             lblProgressBar.setText("Concluído!");
@@ -268,9 +272,9 @@ public class HomeController implements Shutdownable {
         Platform.runLater(() -> {
             final LogItem log = new LogItem(msg, logType);
 
-            vbLog.getChildren().add(log.getContainer());
-            vbLog.applyCss();
-            vbLog.layout();
+            vBoxLog.getChildren().add(log.getContainer());
+            vBoxLog.applyCss();
+            vBoxLog.layout();
             spLogs.setHvalue(1.0);
             spLogs.setVvalue(1.0);
         });

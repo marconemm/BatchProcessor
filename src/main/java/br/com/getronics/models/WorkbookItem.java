@@ -44,15 +44,9 @@ public class WorkbookItem {
         hbox.setAlignment(Pos.CENTER_LEFT);
         hbox.setMinHeight(20);
         hbox.getStyleClass().add("workbook_item");
-        hbox.setOnMouseEntered(_ -> {
-            hbox.setStyle("-fx-background-color: -fx-color-primary-main");
-            lblFileName.setStyle("-fx-text-fill: -fx-color-primary-accent;");
-        });
+        hbox.setOnMouseEntered((_) -> lblFileName.setStyle("-fx-text-fill: -fx-color-primary-accent;"));hbox.setOnMouseEntered((_) -> lblFileName.setStyle("-fx-text-fill: -fx-color-primary-accent;"));
+        hbox.setOnMouseExited((_) -> lblFileName.setStyle("-fx-text-fill: -fx-color-primary-deep;"));hbox.setOnMouseEntered((_) -> lblFileName.setStyle("-fx-text-fill: -fx-color-primary-accent;"));
 
-        hbox.setOnMouseExited(_ -> {
-            hbox.setStyle("-fx-background-color: transparent;");
-            lblFileName.setStyle("-fx-text-fill: -fx-color-primary-deep;");
-        });
 
         // Label:
         lblFileName.getStyleClass().add("workbook_item-label");

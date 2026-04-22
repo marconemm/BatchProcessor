@@ -1,0 +1,98 @@
+Label {
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-color-primary-deep;
+}
+
+/*WORK BOOK ITEMS:*/
+.tooltip {
+    -fx-background-color: -fx-color-neutral-medium;
+    -fx-text-fill: -fx-color-primary-deep;
+    -fx-background-radius: 5;
+    -fx-padding: 5;
+    -fx-border-color: -fx-color-primary-black;
+    -fx-border-width: 1;
+    -fx-border-radius: 10;
+}
+
+.workbook_item {
+    -fx-border-color: -fx-color-neutral-medium;
+    -fx-border-width: 0 0 2 0;
+    -fx-background-color: transparent;
+}
+
+.workbook_item:hover {
+    -fx-background-color: -fx-color-primary-main;
+}
+
+/* PROGRESS BAR: */
+.progress-bar > .track {
+    -fx-background-color: -fx-color-primary-deep; /* Fundo bem preto */
+    -fx-background-radius: 5;
+    -fx-background-insets: 0;
+    -fx-border-color: -fx-color-primary-black; /* Borda cinza escuro */
+    -fx-border-radius: 5;
+    -fx-border-width: 1;
+    -fx-effect: innershadow(three-pass-box, rgba(0, 0, 0, 0.7), 5, 0, 0, 1);
+}
+
+.progress-bar > .bar {
+    -fx-background-radius: 5;
+    -fx-background-insets: 4;
+    -fx-background-color: linear-gradient(
+            to bottom,
+            -fx-color-primary-accent 0%,
+            -fx-color-primary-main 100%
+    );
+
+    -fx-effect: dropshadow(three-pass-box, rgba(13, 242, 5, 0.4), 10, 0, 0, 0);
+}
+
+.progress-bar:determinate > .bar {
+    -fx-transition: 2s;
+}
+
+/*LOG ITEMS:*/
+.log-item-container {
+    -fx-border-color: -fx-color-neutral-medium;
+    -fx-border-width: 0 0 1 0;
+    -fx-margin-bottom: 15;
+}
+
+.log-label-msg {
+    -fx-font-size: 18;
+}
+
+.log-info {
+    -fx-text-fill: -fx-color-neutral-medium;
+    -fx-font-weight: 100;
+}
+
+.log-info:hover {
+    -fx-background-color: rgba(1, 0, 1, 0.05)
+}
+
+.log-success {
+    -fx-font-family: 'Mark Pro Medium';
+    -fx-text-fill: -fx-color-primary-main;
+    -fx-font-weight: 500;
+}
+
+.log-item-container.log-success:hover {
+    -fx-background-color: rgba(3, 140, 76, 0.1)
+}
+
+.log-erro {
+    -fx-font-family: 'Mark Pro Heavy';
+    -fx-text-fill: -fx-color-erro-red;
+    -fx-font-weight: 900;
+}
+
+.log-item-container.log-erro:hover {
+    -fx-background-color: rgba(255, 68, 68, 0.1)
+}
+
+.log-item-container > .log-label-time {
+    -fx-font-weight: 200;
+    -fx-font-size: 13;
+    -fx-text-fill: -fx-color-neutral-medium;
+}

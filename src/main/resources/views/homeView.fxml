@@ -39,7 +39,7 @@
             </VBox>
         </ScrollPane>
         <ProgressBar fx:id="pbWorkBooks" layoutY="236.0" prefHeight="25.0" progress="0.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" />
-        <Label fx:id="lblProgressBar" layoutX="578.0" layoutY="261.0" text="Análise(s): X/Y" visible="false" AnchorPane.leftAnchor="578.0" />
+        <Label fx:id="lblProgressBar" layoutX="578.0" layoutY="265.0" text="Análise(s): X/Y" visible="false" AnchorPane.leftAnchor="578.0" />
         <Label layoutY="307.0" text="Selecionar Arquivo de Saída" />
         <Group layoutY="330.0" AnchorPane.leftAnchor="10.0">
             <FontIcon fx:id="fiPickOutputDir" iconLiteral="far-folder" iconSize="20" layoutY="20.0" wrappingWidth="20.0" x="10.0" />
@@ -64,7 +64,7 @@
         <Separator layoutX="10.0" layoutY="445.0" prefHeight="6.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" />
         <Label layoutX="13.0" layoutY="460.0" text="Log de Análise / Erros:" AnchorPane.leftAnchor="0.0" AnchorPane.topAnchor="460.0" />
         <ScrollPane fx:id="spLogs" layoutX="13.0" layoutY="496.0" AnchorPane.bottomAnchor="10.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="495.0">
-            <VBox fx:id="vbLog" fillWidth="false" spacing="5.0">
+            <VBox fx:id="vBoxLog">
                 <padding>
                     <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
                 </padding>

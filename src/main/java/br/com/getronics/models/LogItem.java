@@ -2,11 +2,13 @@ package br.com.getronics.models;
 
 import br.com.getronics.utils.enums.E_LogType;
 import br.com.getronics.utils.enums.styles.E_Colors;
+import javafx.geometry.Insets;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
-import javafx.scene.text.Font;
-import javafx.scene.text.FontPosture;
-import javafx.scene.text.FontWeight;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
+import javafx.scene.paint.Paint;
+import org.kordamp.ikonli.javafx.FontIcon;
 
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -26,42 +28,42 @@ public class LogItem {
     private HBox createLayout() {
         final HBox hbox = new HBox();
         final String time = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"));
-        final Label lblHora = new Label("[" + time + "]:");
-        final Label lblMsg = new Label(mensagem);
-        final String FONT_FAMILY = "Mark Pro";
+        final Label lblHora = new Label("[" + time + "]: ");
+        final Label lblMsg = new Label(" - " + mensagem);
+        final FontIcon icon = new FontIcon("fas-check-square");
 
         hbox.setMaxWidth(Double.MAX_VALUE);
+        hbox.getStyleClass().add("log-item-container");
+        VBox.setMargin(hbox, new Insets(0, 0, 5, 0));
 
         // 1-) Setup the mensage:
-        lblHora.setTextFill(E_Colors.PRIMARY_DEEP.getColor());
-        lblHora.setFont(Font.font(FONT_FAMILY, FontWeight.MEDIUM, 12));
-
-        lblMsg.setFont(Font.font(FONT_FAMILY, FontWeight.NORMAL, 14));
-        lblMsg.setWrapText(true);
-        lblMsg.setMaxWidth(650);
+        lblHora.getStyleClass().add("log-label-time");
+        lblMsg.setMaxWidth(hbox.getMaxWidth());
+        HBox.setHgrow(lblMsg, Priority.ALWAYS);
 
         // 3. Styling:
         switch (logType) {
             case SUCCESS -> {
-                lblMsg.setTextFill(E_Colors.PRIMARY_MAIN.getColor());
-                lblMsg.setFont(Font.font(FONT_FAMILY, FontWeight.BOLD, 15));
+                hbox.getStyleClass().add("log-success");
+                lblMsg.getStyleClass().add("log-success");
+                icon.setIconColor(Paint.valueOf(E_Colors.PRIMARY_MAIN.getHex()));
             }
             case ERROR -> {
-                lblMsg.setTextFill(E_Colors.ERROR_RED.getColor());
-                lblMsg.setFont(Font.font(FONT_FAMILY, FontWeight.LIGHT, 13));
+                hbox.getStyleClass().add("log-erro");
+                lblMsg.getStyleClass().add("log-erro");
+                icon.setIconLiteral("fas-exclamation-circle");
+                icon.setIconColor(Paint.valueOf(E_Colors.ERROR_RED.getHex()));
             }
             case INFO -> {
-                lblMsg.setTextFill(E_Colors.NEUTRAL_MEDIUM.getColor());
-                lblMsg.setFont(Font.font(FONT_FAMILY, FontWeight.THIN, FontPosture.ITALIC, 12));
+                hbox.getStyleClass().add("log-info");
+                lblMsg.getStyleClass().add("log-info");
+                icon.setIconLiteral("fas-info-circle");
+                icon.setIconColor(Paint.valueOf(E_Colors.NEUTRAL_MEDIUM.getHex()));
             }
             default -> throw new IllegalArgumentException("Favor, informar o tipo da mensagem de log [E_LogType]");
         }
 
-        hbox.getChildren().addAll(lblHora, lblMsg);
-
-        // Hover effect:
-        hbox.setOnMouseEntered(_ -> hbox.setStyle("-fx-background-color: rgba(255, 255, 255, 0.05);"));
-        hbox.setOnMouseExited(_ -> hbox.setStyle("-fx-background-color: transparent;"));
+        hbox.getChildren().addAll(lblHora, icon, lblMsg);
 
         return hbox;
     }
