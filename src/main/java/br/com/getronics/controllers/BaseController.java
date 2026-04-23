@@ -1,6 +1,6 @@
 package br.com.getronics.controllers;
 
-import br.com.getronics.models.interfaces.Shutdownable;
+import br.com.getronics.interfaces.Shutdownable;
 import br.com.getronics.utils.enums.E_Project;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonBar;

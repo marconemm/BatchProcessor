@@ -1,6 +1,6 @@
 package br.com.getronics.controllers;
 
-import br.com.getronics.models.interfaces.Shutdownable;
+import br.com.getronics.interfaces.Shutdownable;
 import br.com.getronics.utils.enums.views.E_Fxml;
 import br.com.getronics.utils.enums.views.E_windowLayout;
 import javafx.application.Platform;
@@ -68,11 +68,6 @@ public class WrapperController {
     @FXML
     private void openAboutWindow() {
         openNewWindow(E_Fxml.ABOUT, E_windowLayout.CENTER_RIGHT_BOTTOM);
-    }
-
-    @FXML
-    private void initBatchProcess() {
-        //TODO: continuar daqui...
     }
 
     private void setLayout(final E_windowLayout layout) {

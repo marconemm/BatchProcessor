@@ -9,12 +9,22 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.apache.logging.log4j.LogManager.getLogger;
 
 public class Configs {
     final ObjectMapper mapper;
     private final String CONFIG_FILE;
+    private final Map<String, String> originalProperties = new HashMap<>();
+    private final String[] securityKeys = {
+            "jdk.xml.maxGeneralEntitySizeLimit",
+            "jdk.xml.totalEntitySizeLimit",
+            "jdk.xml.entityExpansionLimit",
+            "jdk.xml.maxParameterEntitySizeLimit",
+            "jdk.xml.maxElementDepth"
+    };
     private String lastWorkBooksDir, lastOutPutDir, lastFileName;
 
     public Configs() {
@@ -69,6 +79,26 @@ public class Configs {
         }
 
         this.lastFileName = lastFileName;
+    }
+
+    public void setProperties() {
+        for (final String key : securityKeys) {
+            originalProperties.put(key, System.getProperty(key)); // Backup
+            System.setProperty(key, "0"); // Define as 0 (unlimited)
+        }
+        update();
+    }
+
+    public void unsetProperties() {
+        originalProperties.forEach((key, value) -> {
+            if (value == null) {
+                System.clearProperty(key);
+            } else {
+                System.setProperty(key, value);
+            }
+        });
+        originalProperties.clear();
+        update();
     }
 
     public void update(final Configs updatedConfigs) {

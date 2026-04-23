@@ -1,9 +1,10 @@
 package br.com.getronics.controllers;
 
+import br.com.getronics.core.ExcelToTextMapper;
 import br.com.getronics.database.Configs;
+import br.com.getronics.interfaces.Shutdownable;
 import br.com.getronics.models.LogItem;
 import br.com.getronics.models.WorkbookItem;
-import br.com.getronics.models.interfaces.Shutdownable;
 import br.com.getronics.utils.enums.E_LogType;
 import br.com.getronics.utils.enums.styles.E_Colors;
 import javafx.application.Platform;
@@ -15,9 +16,15 @@ import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Window;
+import org.apache.poi.openxml4j.util.ZipSecureFile;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
+import org.apache.poi.util.IOUtils;
 import org.kordamp.ikonli.javafx.FontIcon;
 
-import java.io.File;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -93,7 +100,7 @@ public class HomeController implements Shutdownable {
         }
     }
 
-    public void startProcess() {
+    public void startBatchProcess() {
         // 1. To avoid double clicks:
         btnStart.setDisable(true);
         pbWorkBooks.setProgress(0);
@@ -104,25 +111,89 @@ public class HomeController implements Shutdownable {
         processTask = new Task<>() {
             @Override
             protected Void call() throws Exception {
-                final int total = selectedWorkBooksList.size();
+                final int totalFiles = selectedWorkBooksList.size();
 
-                for (int i = 0; i < total; i++) {
-                    if (isCancelled()) {
-                        getLogger().debug("startProcess(): processamento interrompido pelo usuário.");
-                        break;
+                try (final PrintWriter writer = new PrintWriter(
+                        new BufferedWriter(
+                                new FileWriter(savedConfigs.getInitialFileName())
+                        )
+                )) {
+                    final ExcelToTextMapper mapper = new ExcelToTextMapper();
+                    String logTxt;
+
+                    // 2.1 Write the initial header:
+                    writer.println(mapper.getOutputHeader());
+
+                    // 2.2 Remove the Excel security limits:
+                    setupExcelLimits(true);
+
+                    for (int i = 0; i < totalFiles; i++) {
+                        if (isCancelled()) {
+                            updateMessage("Processamento cancelado.");
+                            break;
+                        }
+
+                        final File selectedWorkBook = selectedWorkBooksList.get(i);
+                        final int atual = i + 1;
+                        logTxt = "Lendo arquivo: " + selectedWorkBook.getName();
+
+                        updateMessage(String.format("Análise(s): %d/%d", atual, totalFiles));
+                        addLog(logTxt, E_LogType.INFO);
+                        getLogger().info("processTask.call(): {}", logTxt);
+
+                        // 2.3 Process the entire Excel workbook:
+                        try (final Workbook workbook = WorkbookFactory.create(selectedWorkBook)) {
+                            final Sheet budgetSheet = workbook.getSheetAt(0);
+
+                            for (final Row row : budgetSheet) {
+                                //2.2 Skip the first 5 sheet lines:
+                                if (row.getRowNum() < 4) continue;
+                                //TODO: parei aqui...
+
+                                if (isCancelled()) break;
+
+                                final String processedLine = mapper.mapRow(row);
+                                writer.println(processedLine + " | " + selectedWorkBook.getName());
+                            }
+                        } catch (Exception e) {
+                            logTxt = "Erro ao ler " + selectedWorkBook.getName() + ": " + e.getMessage();
+
+                            addLog(logTxt, E_LogType.ERROR);
+                            getLogger().error("processTask.call(): {}", logTxt);
+                        }
+
+                        addLog(selectedWorkBook.getName() + " - Processado.", E_LogType.INFO);
+                        getLogger().debug("Arquivo \"{}\" processado com sucesso!", selectedWorkBook.getName());
+                        Thread.sleep(500);
+
+                        // 2.4 Update the progress bar:
+                        updateProgress(i + 1, totalFiles);
                     }
 
-                    final File selectedWorkBook = selectedWorkBooksList.get(i);
-                    final int atual = i + 1;
+                    // 2.5 Reset the Excel security limits:
+                    setupExcelLimits(false);
 
-                    updateMessage(String.format("Análise(s): %d/%d", atual, total));
-                    processarPlanilha(selectedWorkBook);
-                    getLogger().debug("Arquivo \"{}\" processado com sucesso!", selectedWorkBook.getName());
-                    Thread.sleep(500);
-
-                    // Update the progress bar:
-                    updateProgress(i + 1, total);
+                } catch (IOException ioe) {
+                    throw new RuntimeException(ioe);
                 }
+
+//                for (int i = 0; i < total; i++) {
+//                    if (isCancelled()) {
+//                        getLogger().debug("startProcess(): processamento interrompido pelo usuário.");
+//                        break;
+//                    }
+//
+//                    final File selectedWorkBook = selectedWorkBooksList.get(i);
+//                    final int atual = i + 1;
+//
+//                    updateMessage(String.format("Análise(s): %d/%d", atual, total));
+//                    processarPlanilha(selectedWorkBook);
+//                    getLogger().debug("Arquivo \"{}\" processado com sucesso!", selectedWorkBook.getName());
+//                    Thread.sleep(500);
+//
+//                    // Update the progress bar:
+//                    updateProgress(i + 1, total);
+//                }
                 return null;
             }
         };
@@ -142,9 +213,10 @@ public class HomeController implements Shutdownable {
         });
 
         processTask.setOnFailed(_ -> {
-            addLog("teste de falha.", E_LogType.ERROR);
+            final Throwable ex = processTask.getException();
+
+            addLog(ex.getMessage(), E_LogType.ERROR);
             btnStart.setDisable(false);
-            Throwable ex = processTask.getException();
             getLogger().error("processTaskFailed(): Falha no processamento.");
             getLogger().error("processTaskFailed(): {}", ex.getMessage());
         });
@@ -264,10 +336,6 @@ public class HomeController implements Shutdownable {
         });
     }
 
-    private void processarPlanilha(final File arquivo) {
-        addLog(arquivo.getName() + " - Processado.", E_LogType.INFO);
-    }
-
     private void addLog(final String msg, final E_LogType logType) {
         Platform.runLater(() -> {
             final LogItem log = new LogItem(msg, logType);
@@ -278,5 +346,27 @@ public class HomeController implements Shutdownable {
             spLogs.setHvalue(1.0);
             spLogs.setVvalue(1.0);
         });
+    }
+
+    private void setupExcelLimits(final Boolean isToSet) {
+        try {
+            if (isToSet) {
+                savedConfigs.setProperties();
+            } else {
+                savedConfigs.unsetProperties();
+            }
+
+            // 2. Extra protection to prevent Apache POI from crashing on large files:
+            IOUtils.setByteArrayMaxOverride(5_000_000); // 5MB, if necessary
+
+            // 3. Avoids "Zip Bomb" error if spreadsheet is too dense:
+            ZipSecureFile.setMinInflateRatio(0.005);
+
+        } catch (Exception e) {
+            final String errMsg = "Erro ao configurar limites de XML: " + e.getMessage();
+
+            addLog(errMsg, E_LogType.ERROR);
+            getLogger().error("processTask.call().setupExcelLimits(): {}", errMsg);
+        }
     }
 }

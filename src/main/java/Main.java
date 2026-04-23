@@ -1,6 +1,6 @@
 import br.com.getronics.controllers.BaseController;
 import br.com.getronics.controllers.WrapperController;
-import br.com.getronics.models.interfaces.Shutdownable;
+import br.com.getronics.interfaces.Shutdownable;
 import br.com.getronics.utils.enums.views.E_Fxml;
 import javafx.application.Application;
 import javafx.application.Platform;

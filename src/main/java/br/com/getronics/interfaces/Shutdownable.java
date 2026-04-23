@@ -1,4 +1,4 @@
-package br.com.getronics.models.interfaces;
+package br.com.getronics.interfaces;
 
 import static org.apache.logging.log4j.LogManager.getLogger;
 
