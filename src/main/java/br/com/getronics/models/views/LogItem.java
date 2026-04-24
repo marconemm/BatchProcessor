@@ -1,5 +1,6 @@
-package br.com.getronics.models;
+package br.com.getronics.models.views;
 
+import br.com.getronics.utils.BatchProcessorException;
 import br.com.getronics.utils.enums.E_LogType;
 import br.com.getronics.utils.enums.styles.E_Colors;
 import javafx.geometry.Insets;
@@ -60,7 +61,7 @@ public class LogItem {
                 icon.setIconLiteral("fas-info-circle");
                 icon.setIconColor(Paint.valueOf(E_Colors.NEUTRAL_MEDIUM.getHex()));
             }
-            default -> throw new IllegalArgumentException("Favor, informar o tipo da mensagem de log [E_LogType]");
+            default -> throw new BatchProcessorException("Favor, informar o tipo da mensagem de log [E_LogType]");
         }
 
         hbox.getChildren().addAll(lblHora, icon, lblMsg);

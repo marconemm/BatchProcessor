@@ -1,4 +1,4 @@
-package br.com.getronics.models;
+package br.com.getronics.models.views;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;

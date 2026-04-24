@@ -1,7 +1,12 @@
 package br.com.getronics.database;
 
+import br.com.getronics.models.views.BatchProcessorAlert;
+import br.com.getronics.utils.BatchProcessorException;
 import br.com.getronics.utils.enums.E_Project;
 import javafx.scene.control.Alert;
+import org.apache.poi.openxml4j.util.ZipSecureFile;
+import org.apache.poi.util.IOUtils;
+import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
 
 import java.io.File;
@@ -14,8 +19,10 @@ import java.util.Map;
 
 import static org.apache.logging.log4j.LogManager.getLogger;
 
-public class Configs {
+public class UserConfigs {
     final ObjectMapper mapper;
+
+    final String separator;
     private final String CONFIG_FILE;
     private final Map<String, String> originalProperties = new HashMap<>();
     private final String[] securityKeys = {
@@ -23,16 +30,21 @@ public class Configs {
             "jdk.xml.totalEntitySizeLimit",
             "jdk.xml.entityExpansionLimit",
             "jdk.xml.maxParameterEntitySizeLimit",
-            "jdk.xml.maxElementDepth"
+            "jdk.xml.maxElementDepth",
+            "IOUtils.ByteArrayMaxOverride",
+            "ZipSecureFile.MinInflateRatio"
     };
+
     private String lastWorkBooksDir, lastOutPutDir, lastFileName;
 
-    public Configs() {
+    public UserConfigs() {
         final String CONFIG_DIR = Paths.get(System.getProperty("user.home"),
                 "." + E_Project.PROJECT_NAME.getValue()).toString();
+        final String os = System.getProperty("os.name").toLowerCase();
 
         CONFIG_FILE = Paths.get(CONFIG_DIR,
                 "." + E_Project.PROJECT_NAME.getValue() + "_config.json").toString();
+        separator = os.contains("win") ? "\\" : "/";
         mapper = new ObjectMapper();
     }
 
@@ -83,9 +95,24 @@ public class Configs {
 
     public void setProperties() {
         for (final String key : securityKeys) {
-            originalProperties.put(key, System.getProperty(key)); // Backup
-            System.setProperty(key, "0"); // Define as 0 (unlimited)
+            // 1. Backup:
+            if (key.equals("IOUtils.ByteArrayMaxOverride"))
+                originalProperties.put(key, String.valueOf(IOUtils.getByteArrayMaxOverride()));
+            else if (key.equals("ZipSecureFile.MinInflateRatio"))
+                originalProperties.put(key, String.valueOf(ZipSecureFile.getMinInflateRatio()));
+            else
+                originalProperties.put(key, System.getProperty(key));
+
+            // 2. Define as 0 (unlimited):
+            System.setProperty(key, "0");
+
+            // 3. Extra protection to prevent Apache POI from crashing on large files:
+            IOUtils.setByteArrayMaxOverride(5_000_000); // 5MB, if necessary
+
+            // 4. Avoids "Zip Bomb" error if spreadsheet is too dense:
+            ZipSecureFile.setMinInflateRatio(0.005);
         }
+
         update();
     }
 
@@ -101,12 +128,12 @@ public class Configs {
         update();
     }
 
-    public void update(final Configs updatedConfigs) {
+    public void update(final UserConfigs updatedUserConfigs) {
         final File configFile = new File(CONFIG_FILE);
 
-        setLastWorkBooksDir(updatedConfigs.getLastWorkBooksDir());
-        setLastOutputDir(updatedConfigs.getLastOutPutDir());
-        setLastFileName(updatedConfigs.getLastOutputFile());
+        setLastWorkBooksDir(updatedUserConfigs.getLastWorkBooksDir());
+        setLastOutputDir(updatedUserConfigs.getLastOutPutDir());
+        setLastFileName(updatedUserConfigs.getLastOutputFile());
 
         mapper.writerWithDefaultPrettyPrinter().writeValue(configFile, this);
     }
@@ -141,16 +168,25 @@ public class Configs {
             }
 
             if (configFile.exists()) {
-                final Configs savedConfig = mapper.readValue(configFile, Configs.class);
+                try {
+                    final UserConfigs savedConfig = mapper.readValue(configFile, UserConfigs.class);
+                    update(savedConfig);
+                } catch (JacksonException e) {
+                    final String errMsg = String.format("Erro na leitura do arquivo \"%s\".\n" +
+                            "Por favor, apague o arquivo acima e reinicie a aplicação.", CONFIG_FILE);
 
-                update(savedConfig);
+                    throw new BatchProcessorException(errMsg);
+                }
+            } else {
+                update();
             }
-        } catch (IOException ioe) {
-            final Alert alert = new Alert(Alert.AlertType.ERROR);
+        } catch (Exception e) {
+            final BatchProcessorAlert alert = new BatchProcessorAlert(Alert.AlertType.ERROR);
 
-            getLogger().error("loadConfig: {}", ioe.getLocalizedMessage());
-            alert.setTitle("Erro");
-            alert.setHeaderText(ioe.getLocalizedMessage());
+            alert.setAlwaysOnTop(true);
+            getLogger().error("loadConfig: {}", e.getLocalizedMessage());
+            alert.setTitle(E_Project.PROJECT_NAME.getValue() + " - Erro:");
+            alert.setHeaderText(e.getLocalizedMessage());
             alert.show();
         }
     }
