@@ -5,6 +5,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
+import javafx.stage.Window;
 
 public class BatchProcessorAlert extends Alert {
     public BatchProcessorAlert(AlertType alertType) {
@@ -15,21 +16,25 @@ public class BatchProcessorAlert extends Alert {
     public BatchProcessorAlert(AlertType alertType, String contentText, ButtonType... buttons) {
         super(alertType, contentText, buttons);
         setUp();
-
     }
 
     private void setUp() {
-        this.setOnShowing(_ -> {
-            final Rectangle2D screenBounds = Screen.getPrimary().getVisualBounds();
+        try {
+            final Window parent = this.getDialogPane().getScene().getWindow();
 
-            this.setX((screenBounds.getWidth() - 600) / 2);
-            this.setY((screenBounds.getHeight() - 300) / 2);
-        });
-    }
+            this.initOwner(parent);
 
-    public void setAlwaysOnTop(boolean b) {
-        final Stage stage = (Stage) this.getDialogPane().getScene().getWindow();
+        } catch (IllegalArgumentException iae) {
+            final Stage stage = (Stage) this.getDialogPane().getScene().getWindow();
 
-        stage.setAlwaysOnTop(b);
+            this.setOnShowing(_ -> {
+                final Rectangle2D screenBounds = Screen.getPrimary().getVisualBounds();
+
+                this.setX((screenBounds.getWidth() - 700) / 2);
+                this.setY((screenBounds.getHeight() - 350) / 2);
+            });
+
+            stage.setAlwaysOnTop(true);
+        }
     }
 }
