@@ -9,6 +9,7 @@ import org.apache.poi.util.IOUtils;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
 
+import javax.swing.filechooser.FileSystemView;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
@@ -23,7 +24,7 @@ public class UserConfigs {
     final ObjectMapper mapper;
 
     final String separator;
-    private final String CONFIG_FILE;
+    private final String CONFIG_FILE, DOC_DIR, SELECT_FOLDER_PLACEHOLDER;
     private final Map<String, String> originalProperties = new HashMap<>();
     private final String[] securityKeys = {
             "jdk.xml.maxGeneralEntitySizeLimit",
@@ -38,14 +39,20 @@ public class UserConfigs {
     private String lastWorkBooksDir, lastOutPutDir, lastFileName;
 
     public UserConfigs() {
+        final String os = System.getProperty("os.name").toLowerCase();
         final String CONFIG_DIR = Paths.get(System.getProperty("user.home"),
                 "." + E_Project.PROJECT_NAME.getValue()).toString();
-        final String os = System.getProperty("os.name").toLowerCase();
 
+        SELECT_FOLDER_PLACEHOLDER = "<Selecionar Pasta>";
         CONFIG_FILE = Paths.get(CONFIG_DIR,
                 "." + E_Project.PROJECT_NAME.getValue() + "_config.json").toString();
+        DOC_DIR = FileSystemView.getFileSystemView().getDefaultDirectory().getPath();
         separator = os.contains("win") ? "\\" : "/";
         mapper = new ObjectMapper();
+    }
+
+    public String getDocDir() {
+        return DOC_DIR;
     }
 
     public String getLastWorkBooksDir() {
@@ -63,7 +70,7 @@ public class UserConfigs {
 
     public String getLastOutPutDir() {
         if (lastOutPutDir == null)
-            return "<Selecionar Pasta>";
+            return SELECT_FOLDER_PLACEHOLDER;
 
         return lastOutPutDir;
     }
@@ -86,7 +93,7 @@ public class UserConfigs {
     }
 
     public void setLastFileName(String lastFileName) {
-        if (!lastFileName.toLowerCase().endsWith(".txt")) {
+        if (lastFileName != null && !lastFileName.toLowerCase().endsWith(".txt")) {
             lastFileName += ".txt";
         }
 
@@ -96,21 +103,21 @@ public class UserConfigs {
     public void setProperties() {
         for (final String key : securityKeys) {
             // 1. Backup:
-            if (key.equals("IOUtils.ByteArrayMaxOverride"))
+            if (key.equals("IOUtils.ByteArrayMaxOverride")) {
+                // 3. Extra protection to prevent Apache POI from crashing on large files:
                 originalProperties.put(key, String.valueOf(IOUtils.getByteArrayMaxOverride()));
-            else if (key.equals("ZipSecureFile.MinInflateRatio"))
+                IOUtils.setByteArrayMaxOverride(5_000_000); // 5MB, if necessary
+
+            } else if (key.equals("ZipSecureFile.MinInflateRatio")) {
+                // 4. Avoids "Zip Bomb" error if spreadsheet is too dense:
                 originalProperties.put(key, String.valueOf(ZipSecureFile.getMinInflateRatio()));
-            else
+                ZipSecureFile.setMinInflateRatio(0.005);
+
+            } else {
+                // 2. Define as 0 (unlimited):
                 originalProperties.put(key, System.getProperty(key));
-
-            // 2. Define as 0 (unlimited):
-            System.setProperty(key, "0");
-
-            // 3. Extra protection to prevent Apache POI from crashing on large files:
-            IOUtils.setByteArrayMaxOverride(5_000_000); // 5MB, if necessary
-
-            // 4. Avoids "Zip Bomb" error if spreadsheet is too dense:
-            ZipSecureFile.setMinInflateRatio(0.005);
+                System.setProperty(key, "0");
+            }
         }
 
         update();
@@ -118,10 +125,16 @@ public class UserConfigs {
 
     public void unsetProperties() {
         originalProperties.forEach((key, value) -> {
-            if (value == null) {
-                System.clearProperty(key);
-            } else {
-                System.setProperty(key, value);
+            switch (key) {
+                //TODO: parei aqui:
+                case "IOUtils.ByteArrayMaxOverride" -> IOUtils.setByteArrayMaxOverride(5_000_000);
+                case "ZipSecureFile.MinInflateRatio" ->  ZipSecureFile.setMinInflateRatio(0.005);
+                default -> {
+                    if (value == null)
+                        System.clearProperty(key);
+                    else
+                        System.setProperty(key, value);
+                }
             }
         });
         originalProperties.clear();
@@ -149,10 +162,16 @@ public class UserConfigs {
     }
 
     public String getLastOutputFile() {
-        final String os = System.getProperty("os.name").toLowerCase();
-        final String separator = os.contains("win") ? "\\" : "/";
+        final String result = String.format("%s%s%s", getLastOutPutDir(), separator, getInitialFileName());
 
-        return String.format("%s%s%s", getLastOutPutDir(), separator, getInitialFileName());
+        if (lastOutPutDir.contains(SELECT_FOLDER_PLACEHOLDER)) {
+            return getInitialFileName();
+        }
+
+        if (result.contains(separator + separator))
+            return getLastOutPutDir();
+
+        return result;
     }
 
     public void fetchData() {
@@ -183,7 +202,6 @@ public class UserConfigs {
         } catch (Exception e) {
             final BatchProcessorAlert alert = new BatchProcessorAlert(Alert.AlertType.ERROR);
 
-            alert.setAlwaysOnTop(true);
             getLogger().error("loadConfig: {}", e.getLocalizedMessage());
             alert.setTitle(E_Project.PROJECT_NAME.getValue() + " - Erro:");
             alert.setHeaderText(e.getLocalizedMessage());

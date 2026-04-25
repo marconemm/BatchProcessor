@@ -1,10 +1,11 @@
 package br.com.getronics.controllers;
 
 import br.com.getronics.core.ExcelToTextMapper;
-import br.com.getronics.database.Configs;
+import br.com.getronics.core.WorkbookReader;
+import br.com.getronics.database.UserConfigs;
 import br.com.getronics.interfaces.Shutdownable;
-import br.com.getronics.models.LogItem;
-import br.com.getronics.models.WorkbookItem;
+import br.com.getronics.models.views.LogItem;
+import br.com.getronics.models.views.WorkbookItem;
 import br.com.getronics.utils.enums.E_LogType;
 import br.com.getronics.utils.enums.styles.E_Colors;
 import javafx.application.Platform;
@@ -16,12 +17,10 @@ import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Window;
-import org.apache.poi.openxml4j.util.ZipSecureFile;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
-import org.apache.poi.util.IOUtils;
 import org.kordamp.ikonli.javafx.FontIcon;
 
 import java.io.*;
@@ -32,7 +31,7 @@ import static org.apache.logging.log4j.LogManager.getLogger;
 
 public class HomeController implements Shutdownable {
     private final List<File> selectedWorkBooksList;
-    private final Configs savedConfigs;
+    private final UserConfigs savedUserConfigs;
     private Task<Void> processTask;
 
     @FXML
@@ -56,12 +55,12 @@ public class HomeController implements Shutdownable {
 
     public HomeController() {
         selectedWorkBooksList = new ArrayList<>();
-        savedConfigs = new Configs();
-        savedConfigs.fetchData();
+        savedUserConfigs = new UserConfigs();
+        savedUserConfigs.fetchData();
     }
 
     public void initialize() {
-        inputTextOutputFile.setText(savedConfigs.getLastOutPutDir());
+        inputTextOutputFile.setText(savedUserConfigs.getLastOutPutDir());
         inputTextOutputFile.textProperty().addListener(
                 (_, oldValue, newValue) -> {
                     updateOutputDir();
@@ -78,14 +77,14 @@ public class HomeController implements Shutdownable {
         fileChooser.getExtensionFilters().add(
                 new FileChooser.ExtensionFilter("Arquivos Excel", "*.xlsx", "*.xls")
         );
-        fileChooser.setInitialDirectory(new File(savedConfigs.getLastWorkBooksDir()));
+        fileChooser.setInitialDirectory(new File(savedUserConfigs.getLastWorkBooksDir()));
 
         final Window parentWindow = ((Node) e.getSource()).getScene().getWindow();
         final List<File> files = fileChooser.showOpenMultipleDialog(parentWindow);
 
         if (files != null && !files.isEmpty()) {
-            savedConfigs.setLastWorkBooksDir(files.getFirst().getParent());
-            savedConfigs.update();
+            savedUserConfigs.setLastWorkBooksDir(files.getFirst().getParent());
+            savedUserConfigs.update();
             selectedWorkBooksList.clear();
             lblProgressBar.setVisible(false);
             pbWorkBooks.setProgress(0);
@@ -115,16 +114,13 @@ public class HomeController implements Shutdownable {
 
                 try (final PrintWriter writer = new PrintWriter(
                         new BufferedWriter(
-                                new FileWriter(savedConfigs.getInitialFileName())
+                                new FileWriter(savedUserConfigs.getInitialFileName())
                         )
                 )) {
                     final ExcelToTextMapper mapper = new ExcelToTextMapper();
                     String logTxt;
 
-                    // 2.1 Write the initial header:
-                    writer.println(mapper.getOutputHeader());
-
-                    // 2.2 Remove the Excel security limits:
+                    // 2.1 Remove the Excel security limits:
                     setupExcelLimits(true);
 
                     for (int i = 0; i < totalFiles; i++) {
@@ -135,25 +131,39 @@ public class HomeController implements Shutdownable {
 
                         final File selectedWorkBook = selectedWorkBooksList.get(i);
                         final int atual = i + 1;
+
                         logTxt = "Lendo arquivo: " + selectedWorkBook.getName();
 
                         updateMessage(String.format("Análise(s): %d/%d", atual, totalFiles));
                         addLog(logTxt, E_LogType.INFO);
                         getLogger().info("processTask.call(): {}", logTxt);
 
+                        // 2.1 Write the initial header:
+                        writer.println(mapper.getOutputHeader(selectedWorkBook));
+
                         // 2.3 Process the entire Excel workbook:
                         try (final Workbook workbook = WorkbookFactory.create(selectedWorkBook)) {
                             final Sheet budgetSheet = workbook.getSheetAt(0);
 
+                            WorkbookReader.evaluator = workbook.getCreationHelper().createFormulaEvaluator();
+
                             for (final Row row : budgetSheet) {
                                 //2.2 Skip the first 5 sheet lines:
                                 if (row.getRowNum() < 4) continue;
-                                //TODO: parei aqui...
 
-                                if (isCancelled()) break;
+                                if (isCancelled()) {
+                                    getLogger().info("startProcess(): processamento interrompido pelo usuário.");
+                                    break;
+                                }
+
+                                updateMessage(String.format("Análise(s): %d/%d", atual, totalFiles));
 
                                 final String processedLine = mapper.mapRow(row);
-                                writer.println(processedLine + " | " + selectedWorkBook.getName());
+
+                                writer.println(processedLine);
+
+                                // 2.3 Update the progress bar:
+                                updateProgress(i + 1, totalFiles);
                             }
                         } catch (Exception e) {
                             logTxt = "Erro ao ler " + selectedWorkBook.getName() + ": " + e.getMessage();
@@ -170,30 +180,13 @@ public class HomeController implements Shutdownable {
                         updateProgress(i + 1, totalFiles);
                     }
 
-                    // 2.5 Reset the Excel security limits:
-                    setupExcelLimits(false);
 
                 } catch (IOException ioe) {
                     throw new RuntimeException(ioe);
+                } finally {
+                    // 2.5 Make sure to reset the Excel security limits:
+                    setupExcelLimits(false);
                 }
-
-//                for (int i = 0; i < total; i++) {
-//                    if (isCancelled()) {
-//                        getLogger().debug("startProcess(): processamento interrompido pelo usuário.");
-//                        break;
-//                    }
-//
-//                    final File selectedWorkBook = selectedWorkBooksList.get(i);
-//                    final int atual = i + 1;
-//
-//                    updateMessage(String.format("Análise(s): %d/%d", atual, total));
-//                    processarPlanilha(selectedWorkBook);
-//                    getLogger().debug("Arquivo \"{}\" processado com sucesso!", selectedWorkBook.getName());
-//                    Thread.sleep(500);
-//
-//                    // Update the progress bar:
-//                    updateProgress(i + 1, total);
-//                }
                 return null;
             }
         };
@@ -238,9 +231,10 @@ public class HomeController implements Shutdownable {
 
     public void selectOutputDir() {
         final FileChooser fileChooser = new FileChooser();
-        final File currFile = new File(inputTextOutputFile.getText());
-        final Configs newConfigs = new Configs();
-        newConfigs.fetchData();
+//        final UserConfigs newUserConfigs = new UserConfigs();
+        File currFile = new File(inputTextOutputFile.getText());
+
+//        newUserConfigs.fetchData();
 
         fileChooser.setTitle("Definir Arquivo de Saída");
         // 1-) Only *.txt:
@@ -248,23 +242,25 @@ public class HomeController implements Shutdownable {
                 new FileChooser.ExtensionFilter("Arquivos de Texto (*.txt)", "*.txt")
         );
         // 2-) Suggest a filename:
-        fileChooser.setInitialFileName(newConfigs.getInitialFileName());
+        savedUserConfigs.setLastFileName(null);
+        fileChooser.setInitialFileName(savedUserConfigs.getInitialFileName());
 
         if (currFile.exists()) {
             fileChooser.setInitialDirectory(currFile);
-        } else if (currFile.getParentFile().exists()) {
-            fileChooser.setInitialDirectory(currFile.getParentFile());
+        } else {
+            currFile = new File(savedUserConfigs.getDocDir());
+            fileChooser.setInitialDirectory(currFile);
         }
 
         final File finalFile = fileChooser.showSaveDialog(inputTextOutputFile.getScene().getWindow());
 
         // 3-) Save the config:
         if (finalFile != null) {
-            newConfigs.setLastFileName(finalFile.getName());
-            newConfigs.setLastOutputDir(finalFile.getParent());
+            savedUserConfigs.setLastFileName(finalFile.getName());
+            savedUserConfigs.setLastOutputDir(finalFile.getParent());
 
-            inputTextOutputFile.setText(newConfigs.getLastOutputFile());
-            savedConfigs.update(newConfigs);
+            inputTextOutputFile.setText(savedUserConfigs.getLastOutputFile());
+//            savedUserConfigs.update(newUserConfigs);
 
             //4-) Update the FontIcon:
             fiPickOutputDir.setIconLiteral("far-folder-open");
@@ -279,17 +275,17 @@ public class HomeController implements Shutdownable {
         if (txt.endsWith(".txt")) {
             // 2-) Update the config:
             if (currFile.exists()) {
-                savedConfigs.setLastOutputDir(txt);
-                savedConfigs.setLastFileName(txt);
+                savedUserConfigs.setLastOutputDir(txt);
+                savedUserConfigs.setLastFileName(txt);
             } else if (currFile.getParentFile().exists()) {
-                savedConfigs.setLastOutputDir(currFile.getParent());
-                savedConfigs.setLastFileName(currFile.getName());
+                savedUserConfigs.setLastOutputDir(currFile.getParent());
+                savedUserConfigs.setLastFileName(currFile.getName());
             }
 
-            // 3-) Save the config:
+            // 3-) Save the config:/home/satnaka/IdeaProjects/BatchProcessor
             inputTextOutputFile.setStyle(" -fx-border-width: 2;" + "-fx-border-color: "
                     + E_Colors.PRIMARY_ACCENT.getHex());
-            savedConfigs.update();
+            savedUserConfigs.update();
 
         } else {
             inputTextOutputFile.setStyle(
@@ -351,16 +347,10 @@ public class HomeController implements Shutdownable {
     private void setupExcelLimits(final Boolean isToSet) {
         try {
             if (isToSet) {
-                savedConfigs.setProperties();
+                savedUserConfigs.setProperties();
             } else {
-                savedConfigs.unsetProperties();
+                savedUserConfigs.unsetProperties();
             }
-
-            // 2. Extra protection to prevent Apache POI from crashing on large files:
-            IOUtils.setByteArrayMaxOverride(5_000_000); // 5MB, if necessary
-
-            // 3. Avoids "Zip Bomb" error if spreadsheet is too dense:
-            ZipSecureFile.setMinInflateRatio(0.005);
 
         } catch (Exception e) {
             final String errMsg = "Erro ao configurar limites de XML: " + e.getMessage();
