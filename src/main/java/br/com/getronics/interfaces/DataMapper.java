@@ -5,7 +5,8 @@ import org.apache.poi.ss.usermodel.Row;
 import java.io.File;
 
 public interface DataMapper {
-    String getOutputHeader(File file);
+    String getOutputHeader(final File file);
 
-    String mapRow(Row row);
+    void mapRow(final Row row);
+    void sortRowsList();
 }

@@ -4,8 +4,23 @@ import br.com.getronics.interfaces.DataMapper;
 import org.apache.poi.ss.usermodel.Row;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 
 public class ExcelToTextMapper implements DataMapper {
+    private final List<WorkbookReader> mappedRowList;
+    private WorkbookReader prevRow;
+    private byte blankRowInSequence;
+
+    public ExcelToTextMapper() {
+        mappedRowList = new ArrayList<>();
+        blankRowInSequence = 0;
+    }
+
+    public List<WorkbookReader> getMappedRowList() {
+        return mappedRowList;
+    }
 
     @Override
     public String getOutputHeader(final File file) {
@@ -23,15 +38,43 @@ public class ExcelToTextMapper implements DataMapper {
     }
 
     @Override
-    public String mapRow(final Row row) {
-        final WorkbookReader reader = new WorkbookReader();
+    public void mapRow(final Row row) {
+        if (blankRowInSequence > 4)
+            return;
 
-        reader.setInstance(row);
+        final WorkbookReader mappedRow = new WorkbookReader();
 
-        return String.format("Item: %s\n%s%s%s",
-                reader.getId(),
-                reader.getArtifactName(),
-                reader.getTask(),
-                reader.getRemark());
+        mappedRow.setInstance(row);
+
+        if (mappedRow.getId().isBlank())
+            blankRowInSequence++;
+        else
+            blankRowInSequence = 0;
+
+        mappedRowList.add(mappedRow);
+    }
+
+    @Override
+    public void sortRowsList() {
+        // 1. remove all the "Blank rows" and sort the mappedRowList:
+        mappedRowList.removeIf(row -> row.getId().isBlank());
+        mappedRowList.sort(Comparator.naturalOrder());
+        prevRow = mappedRowList.getFirst();
+
+        // 2. remove the sameId duplicates:
+        mappedRowList.forEach(row -> {
+            final boolean isFirst = row.compareTo(mappedRowList.getFirst()) == 0;
+            final boolean isSameId = (byte) prevRow.compareTo(row) == 0;
+
+            if (isFirst)
+                row.setOrder((short) 1);
+            else
+                row.setOrder((short) (prevRow.getOrder() + 1));
+
+            if (!isFirst && isSameId)
+                row.setId("");
+
+            prevRow = row;
+        });
     }
 }

@@ -102,21 +102,23 @@ public class UserConfigs {
 
     public void setProperties() {
         for (final String key : securityKeys) {
-            // 1. Backup:
-            if (key.equals("IOUtils.ByteArrayMaxOverride")) {
-                // 3. Extra protection to prevent Apache POI from crashing on large files:
-                originalProperties.put(key, String.valueOf(IOUtils.getByteArrayMaxOverride()));
-                IOUtils.setByteArrayMaxOverride(5_000_000); // 5MB, if necessary
 
-            } else if (key.equals("ZipSecureFile.MinInflateRatio")) {
-                // 4. Avoids "Zip Bomb" error if spreadsheet is too dense:
-                originalProperties.put(key, String.valueOf(ZipSecureFile.getMinInflateRatio()));
-                ZipSecureFile.setMinInflateRatio(0.005);
-
-            } else {
-                // 2. Define as 0 (unlimited):
-                originalProperties.put(key, System.getProperty(key));
-                System.setProperty(key, "0");
+            switch (key) {
+                case "IOUtils.ByteArrayMaxOverride" -> {
+                    // 1. Extra protection to prevent Apache POI from crashing on large files:
+                    originalProperties.put(key, String.valueOf(IOUtils.getByteArrayMaxOverride()));
+                    IOUtils.setByteArrayMaxOverride(4 * 1024); // 4MB, if necessary
+                }
+                case "ZipSecureFile.MinInflateRatio" -> {
+                    // 2. Avoids "Zip Bomb" error if spreadsheet is too dense:
+                    originalProperties.put(key, String.valueOf(ZipSecureFile.getMinInflateRatio()));
+                    ZipSecureFile.setMinInflateRatio(0.005);
+                }
+                default -> {
+                    // 3. Define as 0 (unlimited):
+                    originalProperties.put(key, System.getProperty(key));
+                    System.setProperty(key, "0");
+                }
             }
         }
 
@@ -126,9 +128,8 @@ public class UserConfigs {
     public void unsetProperties() {
         originalProperties.forEach((key, value) -> {
             switch (key) {
-                //TODO: parei aqui:
-                case "IOUtils.ByteArrayMaxOverride" -> IOUtils.setByteArrayMaxOverride(5_000_000);
-                case "ZipSecureFile.MinInflateRatio" ->  ZipSecureFile.setMinInflateRatio(0.005);
+                case "IOUtils.ByteArrayMaxOverride" -> IOUtils.setByteArrayMaxOverride(Integer.parseInt(value));
+                case "ZipSecureFile.MinInflateRatio" -> ZipSecureFile.setMinInflateRatio(Double.parseDouble(value));
                 default -> {
                     if (value == null)
                         System.clearProperty(key);

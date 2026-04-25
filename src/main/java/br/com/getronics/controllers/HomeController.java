@@ -109,14 +109,13 @@ public class HomeController implements Shutdownable {
         // 2. Process task:
         processTask = new Task<>() {
             @Override
-            protected Void call() throws Exception {
+            protected Void call() {
                 final int totalFiles = selectedWorkBooksList.size();
 
                 try (final PrintWriter writer = new PrintWriter(
                         new BufferedWriter(
-                                new FileWriter(savedUserConfigs.getInitialFileName())
-                        )
-                )) {
+                                new FileWriter(savedUserConfigs.getInitialFileName())))) {
+
                     final ExcelToTextMapper mapper = new ExcelToTextMapper();
                     String logTxt;
 
@@ -125,7 +124,9 @@ public class HomeController implements Shutdownable {
 
                     for (int i = 0; i < totalFiles; i++) {
                         if (isCancelled()) {
-                            updateMessage("Processamento cancelado.");
+                            logTxt = "Processamento cancelado.";
+                            updateMessage(logTxt);
+                            getLogger().info("isCancelled()[1]: {}", logTxt);
                             break;
                         }
 
@@ -138,7 +139,7 @@ public class HomeController implements Shutdownable {
                         addLog(logTxt, E_LogType.INFO);
                         getLogger().info("processTask.call(): {}", logTxt);
 
-                        // 2.1 Write the initial header:
+                        // 2.2 Write the initial header:
                         writer.println(mapper.getOutputHeader(selectedWorkBook));
 
                         // 2.3 Process the entire Excel workbook:
@@ -147,24 +148,28 @@ public class HomeController implements Shutdownable {
 
                             WorkbookReader.evaluator = workbook.getCreationHelper().createFormulaEvaluator();
 
+                            // 2.3.1 Fill the mapper.mappedRowsList:
                             for (final Row row : budgetSheet) {
-                                //2.2 Skip the first 5 sheet lines:
+                                //2.3.1.1 Skip the first 5 sheet lines:
                                 if (row.getRowNum() < 4) continue;
 
                                 if (isCancelled()) {
-                                    getLogger().info("startProcess(): processamento interrompido pelo usuário.");
+                                    logTxt = "processamento interrompido pelo usuário.";
+                                    updateMessage(logTxt);
+                                    getLogger().info("isCancelled()[2]: {}", logTxt);
                                     break;
                                 }
 
-                                updateMessage(String.format("Análise(s): %d/%d", atual, totalFiles));
-
-                                final String processedLine = mapper.mapRow(row);
-
-                                writer.println(processedLine);
-
-                                // 2.3 Update the progress bar:
-                                updateProgress(i + 1, totalFiles);
+                                mapper.mapRow(row);
                             }
+
+                            // 2.3.2 Write each iem from mapper.mappedRowsList:
+                            mapper.sortRowsList();
+                            mapper.getMappedRowList().forEach(writer::println);
+
+                            // 2.3 Update the progress message:
+                            updateMessage(String.format("Análise(s): %d/%d", atual, totalFiles));
+
                         } catch (Exception e) {
                             logTxt = "Erro ao ler " + selectedWorkBook.getName() + ": " + e.getMessage();
 
@@ -174,13 +179,10 @@ public class HomeController implements Shutdownable {
 
                         addLog(selectedWorkBook.getName() + " - Processado.", E_LogType.INFO);
                         getLogger().debug("Arquivo \"{}\" processado com sucesso!", selectedWorkBook.getName());
-                        Thread.sleep(500);
 
                         // 2.4 Update the progress bar:
                         updateProgress(i + 1, totalFiles);
                     }
-
-
                 } catch (IOException ioe) {
                     throw new RuntimeException(ioe);
                 } finally {
@@ -215,10 +217,10 @@ public class HomeController implements Shutdownable {
         });
 
         // 5. Run the task in a aside Thread:
-        final Thread thread = new Thread(processTask);
+        final Thread t1 = new Thread(processTask);
 
-        thread.setDaemon(true); // To kill the thread if the app closes.
-        thread.start();
+        t1.setDaemon(true); // To kill the t1 if the app closes.
+        t1.start();
     }
 
     @Override
@@ -231,10 +233,7 @@ public class HomeController implements Shutdownable {
 
     public void selectOutputDir() {
         final FileChooser fileChooser = new FileChooser();
-//        final UserConfigs newUserConfigs = new UserConfigs();
-        File currFile = new File(inputTextOutputFile.getText());
-
-//        newUserConfigs.fetchData();
+        File filePath = new File(inputTextOutputFile.getText());
 
         fileChooser.setTitle("Definir Arquivo de Saída");
         // 1-) Only *.txt:
@@ -245,11 +244,11 @@ public class HomeController implements Shutdownable {
         savedUserConfigs.setLastFileName(null);
         fileChooser.setInitialFileName(savedUserConfigs.getInitialFileName());
 
-        if (currFile.exists()) {
-            fileChooser.setInitialDirectory(currFile);
+        if (filePath.exists()) {
+            fileChooser.setInitialDirectory(filePath);
         } else {
-            currFile = new File(savedUserConfigs.getDocDir());
-            fileChooser.setInitialDirectory(currFile);
+            filePath = new File(savedUserConfigs.getDocDir());
+            fileChooser.setInitialDirectory(filePath);
         }
 
         final File finalFile = fileChooser.showSaveDialog(inputTextOutputFile.getScene().getWindow());
@@ -258,9 +257,7 @@ public class HomeController implements Shutdownable {
         if (finalFile != null) {
             savedUserConfigs.setLastFileName(finalFile.getName());
             savedUserConfigs.setLastOutputDir(finalFile.getParent());
-
             inputTextOutputFile.setText(savedUserConfigs.getLastOutputFile());
-//            savedUserConfigs.update(newUserConfigs);
 
             //4-) Update the FontIcon:
             fiPickOutputDir.setIconLiteral("far-folder-open");
