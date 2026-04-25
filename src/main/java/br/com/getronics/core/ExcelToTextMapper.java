@@ -6,15 +6,18 @@ import org.apache.poi.ss.usermodel.Row;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 public class ExcelToTextMapper implements DataMapper {
     private final List<WorkbookReader> mappedRowList;
+    private final LinkedHashMap<String, List<String>> batchList;
     private WorkbookReader prevRow;
     private byte blankRowInSequence;
 
     public ExcelToTextMapper() {
         mappedRowList = new ArrayList<>();
+        batchList = new LinkedHashMap<>();
         blankRowInSequence = 0;
     }
 
@@ -56,25 +59,63 @@ public class ExcelToTextMapper implements DataMapper {
 
     @Override
     public void sortRowsList() {
-        // 1. remove all the "Blank rows" and sort the mappedRowList:
+        /* 1. remove all the "Blank rows";
+         * 1.1 split the new batch row, if necessary; and
+         * 1.2 sort the mappedRowList:
+         * */
         mappedRowList.removeIf(row -> row.getId().isBlank());
+        checkArtifactNames();
         mappedRowList.sort(Comparator.naturalOrder());
-        prevRow = mappedRowList.getFirst();
 
-        // 2. remove the sameId duplicates:
+        // 2. set the orders:
+        prevRow = mappedRowList.getFirst();
         mappedRowList.forEach(row -> {
             final boolean isFirst = row.compareTo(mappedRowList.getFirst()) == 0;
-            final boolean isSameId = (byte) prevRow.compareTo(row) == 0;
 
             if (isFirst)
                 row.setOrder((short) 1);
             else
                 row.setOrder((short) (prevRow.getOrder() + 1));
 
-            if (!isFirst && isSameId)
-                row.setId("");
-
             prevRow = row;
         });
+
+        // 3. remove the sameId duplicates:
+//        final List<String> batchList = new ArrayList<>();
+
+        prevRow = mappedRowList.getFirst();
+        mappedRowList.forEach(row -> {
+            final boolean isFirst = row.getOrder() == 1;
+            final boolean hasSameId = (byte) prevRow.compareTo(row) == 0;
+
+            if (!isFirst && hasSameId) {
+                row.setId("");
+            } else
+                prevRow = row;
+        });
+    }
+
+    private void checkArtifactNames() {
+        final String REGEX = "\\s*[; /\\\\,.]\\s*";
+
+        for (int rowIndex = 0; rowIndex < mappedRowList.size(); rowIndex++) {
+            final WorkbookReader currRow = mappedRowList.get(rowIndex);
+            final String[] artifactNamesList = currRow.getArtifactName().split(REGEX);
+
+            // 1. If the artifact name contains any special REGEX character:
+            if (artifactNamesList.length > 1) {
+                // 2. Remove the currRow and reset the rowIndex:
+                mappedRowList.remove(rowIndex);
+                rowIndex = 0;
+
+                // 3. Create the new clone rows:
+                for (final String newArtifactName : artifactNamesList) {
+                    final WorkbookReader newRow = currRow.clone();
+
+                    newRow.setArtifactName(newArtifactName);
+                    mappedRowList.add(newRow);
+                }
+            }
+        }
     }
 }

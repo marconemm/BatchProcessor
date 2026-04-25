@@ -7,7 +7,9 @@ import org.apache.poi.ss.usermodel.FormulaEvaluator;
 import org.apache.poi.ss.usermodel.Row;
 import org.jspecify.annotations.NonNull;
 
-public class WorkbookReader implements Comparable<WorkbookReader> {
+import static org.apache.logging.log4j.LogManager.getLogger;
+
+public class WorkbookReader implements Comparable<WorkbookReader>, Cloneable {
     public static FormulaEvaluator evaluator;
     private final DataFormatter formatter;
     private String id, artifactName, task, remark, qty;
@@ -23,6 +25,14 @@ public class WorkbookReader implements Comparable<WorkbookReader> {
 
     public void setId(final String id) {
         this.id = id;
+    }
+
+    public String getArtifactName() {
+        return artifactName;
+    }
+
+    public void setArtifactName(final String artifactName) {
+        this.artifactName = artifactName;
     }
 
     public short getOrder() {
@@ -75,11 +85,22 @@ public class WorkbookReader implements Comparable<WorkbookReader> {
         if (!id.isBlank()) {
             result = String.format("-----\nSequencial - %s:\n%02d)- %s;Tarefa: %s Observação: %s",
                     id, order, artifactName, task, remark);
+            result += String.format("Lote:\n%s", getBatch());
         } else {
             result = String.format("%02d)- %s;Tarefa: %s Observação: %s", order, artifactName, task, remark);
         }
 
         return result;
+    }
+
+    @Override
+    public WorkbookReader clone() {
+        try {
+            return (WorkbookReader) super.clone();
+        } catch (CloneNotSupportedException cnse) {
+            getLogger().error("clone(): {}", cnse.getMessage());
+            throw new BatchProcessorException(cnse.getMessage());
+        }
     }
 
     private String getCellValueAsString(final Cell cell) {
@@ -99,5 +120,9 @@ public class WorkbookReader implements Comparable<WorkbookReader> {
             case BLANK -> "";
             default -> throw new BatchProcessorException("Please, inform a valid CellType.");
         };
+    }
+
+    private Object getBatch() {
+        return String.format("%s;Tarefa: %s Observação: %s");
     }
 }
