@@ -9,4 +9,6 @@ public interface DataMapper {
 
     void mapRow(final Row row);
     void sortRowsList();
+
+    String getBatchRow();
 }

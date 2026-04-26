@@ -165,9 +165,9 @@ public class HomeController implements Shutdownable {
 
                             // 2.3.2 Write each iem from mapper.mappedRowsList:
                             mapper.sortRowsList();
-                            mapper.getMappedRowList().forEach(writer::println);
+                            writer.println(mapper.getBatchRow());
 
-                            // 2.3 Update the progress message:
+                            // 2.3.3 Update the progress message:
                             updateMessage(String.format("Análise(s): %d/%d", atual, totalFiles));
 
                         } catch (Exception e) {
@@ -177,7 +177,7 @@ public class HomeController implements Shutdownable {
                             getLogger().error("processTask.call(): {}", logTxt);
                         }
 
-                        addLog(selectedWorkBook.getName() + " - Processado.", E_LogType.INFO);
+                        addLog(selectedWorkBook.getName() + " - Processado.", E_LogType.SUCCESS);
                         getLogger().debug("Arquivo \"{}\" processado com sucesso!", selectedWorkBook.getName());
 
                         // 2.4 Update the progress bar:
@@ -199,7 +199,7 @@ public class HomeController implements Shutdownable {
 
         // 4. On finish:
         processTask.setOnSucceeded(_ -> {
-            addLog("Fim dos processamentos.", E_LogType.INFO);
+            addLog("Fim dos processamentos.", E_LogType.SUCCESS);
             getLogger().info("processTaskSucess(): Fim dos processamentos.");
             btnStart.setDisable(false);
             lblProgressBar.textProperty().unbind();

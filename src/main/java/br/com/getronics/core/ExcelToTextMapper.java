@@ -4,14 +4,11 @@ import br.com.getronics.interfaces.DataMapper;
 import org.apache.poi.ss.usermodel.Row;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.LinkedHashMap;
-import java.util.List;
+import java.util.*;
 
 public class ExcelToTextMapper implements DataMapper {
     private final List<WorkbookReader> mappedRowList;
-    private final LinkedHashMap<String, List<String>> batchList;
+    private final LinkedHashMap<String, List<WorkbookReader>> batchList;
     private WorkbookReader prevRow;
     private byte blankRowInSequence;
 
@@ -19,10 +16,6 @@ public class ExcelToTextMapper implements DataMapper {
         mappedRowList = new ArrayList<>();
         batchList = new LinkedHashMap<>();
         blankRowInSequence = 0;
-    }
-
-    public List<WorkbookReader> getMappedRowList() {
-        return mappedRowList;
     }
 
     @Override
@@ -80,19 +73,55 @@ public class ExcelToTextMapper implements DataMapper {
             prevRow = row;
         });
 
-        // 3. remove the sameId duplicates:
-//        final List<String> batchList = new ArrayList<>();
-
+        /*3. remove the sameId duplicates; and
+         * 3.1 fill the batchList:
+         * */
         prevRow = mappedRowList.getFirst();
         mappedRowList.forEach(row -> {
             final boolean isFirst = row.getOrder() == 1;
             final boolean hasSameId = (byte) prevRow.compareTo(row) == 0;
 
-            if (!isFirst && hasSameId) {
+            if (isFirst) {
+                final List<WorkbookReader> firstBatchList = new ArrayList<>();
+
+                firstBatchList.add(row);
+                batchList.putFirst(row.getId(), firstBatchList);
+
+                return;
+            }
+
+            if (hasSameId) {
+                batchList.get(row.getId()).add(row);
                 row.setId("");
-            } else
+            } else {
+                final List<WorkbookReader> nextBatchList = new ArrayList<>();
+
+                nextBatchList.add(row);
+                batchList.putFirst(row.getId(), nextBatchList);
                 prevRow = row;
+            }
         });
+
+        // 4. reset the reference for the prevRow:
+        prevRow = mappedRowList.getFirst();
+    }
+
+    @Override
+    public String getBatchRow() {
+        final StringBuilder result = new StringBuilder();
+
+        batchList.entrySet()
+                .stream()
+                .sorted(Map.Entry.comparingByKey()) // Ordena pelas chaves (String)
+                .forEach(batch -> {
+                    batch.getValue().forEach(result::append);
+                    result.append("\nLote: (para cópia)\n")
+                            .append(getBatch(batch.getValue()))
+                            .append("__________")
+                            .append("\n\n");
+                });
+
+        return result.toString();
     }
 
     private void checkArtifactNames() {
@@ -117,5 +146,21 @@ public class ExcelToTextMapper implements DataMapper {
                 }
             }
         }
+    }
+
+    private String getBatch(final List<WorkbookReader> batchList) {
+        final StringBuilder result = new StringBuilder();
+
+        batchList.forEach(x -> {
+            final String batch = String.format("%s;Tarefa: %s Observação: %s\n",
+                    x.getArtifactName(),
+                    x.getTask(),
+                    x.getRemark()
+            );
+
+            result.append(batch);
+        });
+
+        return result.toString();
     }
 }

@@ -43,6 +43,14 @@ public class WorkbookReader implements Comparable<WorkbookReader>, Cloneable {
         this.order = order;
     }
 
+    public String getTask() {
+        return task;
+    }
+
+    public String getRemark() {
+        return remark;
+    }
+
     public void setInstance(final Row row) {
         id = getCellValueAsString(row.getCell(1));
         qty = getCellValueAsString(row.getCell(8));
@@ -83,11 +91,10 @@ public class WorkbookReader implements Comparable<WorkbookReader>, Cloneable {
         String result;
 
         if (!id.isBlank()) {
-            result = String.format("-----\nSequencial - %s:\n%02d)- %s;Tarefa: %s Observação: %s",
+            result = String.format("Sequencial - %s:\n%02d)- %s;Tarefa: %s Observação: %s\n",
                     id, order, artifactName, task, remark);
-            result += String.format("Lote:\n%s", getBatch());
         } else {
-            result = String.format("%02d)- %s;Tarefa: %s Observação: %s", order, artifactName, task, remark);
+            result = String.format("%02d)- %s;Tarefa: %s Observação: %s\n", order, artifactName, task, remark);
         }
 
         return result;
@@ -120,9 +127,5 @@ public class WorkbookReader implements Comparable<WorkbookReader>, Cloneable {
             case BLANK -> "";
             default -> throw new BatchProcessorException("Please, inform a valid CellType.");
         };
-    }
-
-    private Object getBatch() {
-        return String.format("%s;Tarefa: %s Observação: %s");
     }
 }
