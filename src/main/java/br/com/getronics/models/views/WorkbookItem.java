@@ -44,8 +44,10 @@ public class WorkbookItem {
         hbox.setAlignment(Pos.CENTER_LEFT);
         hbox.setMinHeight(20);
         hbox.getStyleClass().add("workbook_item");
-        hbox.setOnMouseEntered((_) -> lblFileName.setStyle("-fx-text-fill: -fx-color-primary-accent;"));hbox.setOnMouseEntered((_) -> lblFileName.setStyle("-fx-text-fill: -fx-color-primary-accent;"));
-        hbox.setOnMouseExited((_) -> lblFileName.setStyle("-fx-text-fill: -fx-color-primary-deep;"));hbox.setOnMouseEntered((_) -> lblFileName.setStyle("-fx-text-fill: -fx-color-primary-accent;"));
+        hbox.setOnMouseEntered((e) -> lblFileName.setStyle("-fx-text-fill: -fx-color-primary-accent;"));
+        hbox.setOnMouseEntered((e) -> lblFileName.setStyle("-fx-text-fill: -fx-color-primary-accent;"));
+        hbox.setOnMouseExited((e) -> lblFileName.setStyle("-fx-text-fill: -fx-color-primary-deep;"));
+        hbox.setOnMouseEntered((e) -> lblFileName.setStyle("-fx-text-fill: -fx-color-primary-accent;"));
 
 
         // Label:
@@ -64,9 +66,9 @@ public class WorkbookItem {
         btnDelete.setGraphic(trashIcon);
         btnDelete.setGraphicTextGap(5);
         btnDelete.setStyle("-fx-background-color: transparent; -fx-border-color: transparent;");
-        btnDelete.setOnAction(_ -> onRemove.accept(this));
-        btnDelete.setOnMouseEntered(_ -> trashIcon.setIconColor(ERROR_RED.getColor()));
-        btnDelete.setOnMouseExited(_ -> trashIcon.setIconColor(NEUTRAL_MEDIUM.getColor()));
+        btnDelete.setOnAction(e -> onRemove.accept(this));
+        btnDelete.setOnMouseEntered(e -> trashIcon.setIconColor(ERROR_RED.getColor()));
+        btnDelete.setOnMouseExited(e -> trashIcon.setIconColor(NEUTRAL_MEDIUM.getColor()));
 
         hbox.getChildren().addAll(lblFileName, btnDelete);
 

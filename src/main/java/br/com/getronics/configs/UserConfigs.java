@@ -20,7 +20,7 @@ import java.util.Map;
 
 import static org.apache.logging.log4j.LogManager.getLogger;
 
-public class UserConfigs {
+public final class UserConfigs {
     final ObjectMapper mapper;
 
     final String separator;

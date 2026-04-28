@@ -62,7 +62,7 @@ public class HomeController implements Shutdownable {
     public void initialize() {
         inputTextOutputFile.setText(savedUserConfigs.getLastOutPutDir());
         inputTextOutputFile.textProperty().addListener(
-                (_, oldValue, newValue) -> {
+                (e, oldValue, newValue) -> {
                     updateOutputDir();
                     getLogger().debug("inputTextOutputFile Listener: " +
                             "O texto mudou de: \"{}\" para: \"{}\"", oldValue, newValue);
@@ -202,7 +202,7 @@ public class HomeController implements Shutdownable {
         lblProgressBar.textProperty().bind(processTask.messageProperty());
 
         // 4. On finish:
-        processTask.setOnSucceeded(_ -> {
+        processTask.setOnSucceeded(e -> {
             addLog("Fim dos processamentos.", E_LogType.SUCCESS);
             getLogger().info("processTaskSucess(): Fim dos processamentos.");
             btnStart.setDisable(false);
@@ -211,7 +211,7 @@ public class HomeController implements Shutdownable {
             pbWorkBooks.progressProperty().unbind();
         });
 
-        processTask.setOnFailed(_ -> {
+        processTask.setOnFailed(e -> {
             final Throwable ex = processTask.getException();
 
             addLog(ex.getMessage(), E_LogType.ERROR);

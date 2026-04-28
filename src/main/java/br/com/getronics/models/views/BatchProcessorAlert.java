@@ -27,7 +27,7 @@ public class BatchProcessorAlert extends Alert {
         } catch (IllegalArgumentException iae) {
             final Stage stage = (Stage) this.getDialogPane().getScene().getWindow();
 
-            this.setOnShowing(_ -> {
+            this.setOnShowing(e -> {
                 final Rectangle2D screenBounds = Screen.getPrimary().getVisualBounds();
 
                 this.setX((screenBounds.getWidth() - 700) / 2);
