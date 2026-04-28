@@ -7,6 +7,7 @@ src/main/resources/config.properties
 *.log
 Logs/*
 logs/*
+Launch4J_config.xml
 
 # IDEs
 .idea/

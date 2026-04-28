@@ -1,4 +1,4 @@
-rootProject.name = "GetrinicsExcel"
+rootProject.name = "BatchProcessor"
 
 pluginManagement {
     repositories {
