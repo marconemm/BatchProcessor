@@ -43,8 +43,8 @@
         <Label layoutY="307.0" text="Selecionar Arquivo de Saída" />
         <Group layoutY="330.0" AnchorPane.leftAnchor="10.0">
             <FontIcon fx:id="fiPickOutputDir" iconLiteral="far-folder" iconSize="20" layoutY="20.0" wrappingWidth="20.0" x="10.0" />
-           <TextField fx:id="inputTextOutputFile" layoutX="40.0" prefHeight="30.0" prefWidth="600.0" text="&lt;Selecionar Pasta&gt;" />
-           <Button layoutX="650.0" mnemonicParsing="false" onAction="#selectOutputDir" prefHeight="30.0" text="Selecionar...">
+           <TextField fx:id="inputTextOutputFile" editable="false" layoutX="40.0" prefHeight="30.0" prefWidth="600.0" text="&lt;Selecionar Pasta&gt;" />
+           <Button layoutX="650.0" mnemonicParsing="false" onAction="#selectOutputDir" prefHeight="30.0" text="Selecionar">
                <cursor>
                    <Cursor fx:constant="HAND" />
                </cursor>

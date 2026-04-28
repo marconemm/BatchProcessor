@@ -1,4 +1,4 @@
-package br.com.getronics.database;
+package br.com.getronics.configs;
 
 import br.com.getronics.models.views.BatchProcessorAlert;
 import br.com.getronics.utils.BatchProcessorException;
@@ -51,10 +51,6 @@ public class UserConfigs {
         mapper = new ObjectMapper();
     }
 
-    public String getDocDir() {
-        return DOC_DIR;
-    }
-
     public String getLastWorkBooksDir() {
         if (lastWorkBooksDir == null)
             return System.getProperty("user.home");
@@ -71,6 +67,9 @@ public class UserConfigs {
     public String getLastOutPutDir() {
         if (lastOutPutDir == null)
             return SELECT_FOLDER_PLACEHOLDER;
+
+        if (lastOutPutDir.startsWith(SELECT_FOLDER_PLACEHOLDER))
+            return DOC_DIR;
 
         return lastOutPutDir;
     }

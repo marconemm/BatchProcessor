@@ -1,8 +1,8 @@
 package br.com.getronics.controllers;
 
+import br.com.getronics.configs.UserConfigs;
 import br.com.getronics.core.ExcelToTextMapper;
 import br.com.getronics.core.WorkbookReader;
-import br.com.getronics.database.UserConfigs;
 import br.com.getronics.interfaces.Shutdownable;
 import br.com.getronics.models.views.LogItem;
 import br.com.getronics.models.views.WorkbookItem;
@@ -66,7 +66,8 @@ public class HomeController implements Shutdownable {
                     updateOutputDir();
                     getLogger().debug("inputTextOutputFile Listener: " +
                             "O texto mudou de: \"{}\" para: \"{}\"", oldValue, newValue);
-                });
+                }
+        );
     }
 
     public void selectWorkBooks(ActionEvent e) {
@@ -89,6 +90,9 @@ public class HomeController implements Shutdownable {
             lblProgressBar.setVisible(false);
             pbWorkBooks.setProgress(0);
             selectedWorkBooksList.addAll(files);
+            inputTextOutputFile.setText(savedUserConfigs.getLastOutPutDir());
+            inputTextOutputFile.setEditable(false);
+            fiPickOutputDir.setIconLiteral("far-folder");
 
             updateListView();
             btnStart.setDisable(false);
@@ -212,6 +216,7 @@ public class HomeController implements Shutdownable {
 
             addLog(ex.getMessage(), E_LogType.ERROR);
             btnStart.setDisable(false);
+            pbWorkBooks.progressProperty().unbind();
             getLogger().error("processTaskFailed(): Falha no processamento.");
             getLogger().error("processTaskFailed(): {}", ex.getMessage());
         });
@@ -244,12 +249,10 @@ public class HomeController implements Shutdownable {
         savedUserConfigs.setLastFileName(null);
         fileChooser.setInitialFileName(savedUserConfigs.getInitialFileName());
 
-        if (filePath.exists()) {
-            fileChooser.setInitialDirectory(filePath);
-        } else {
-            filePath = new File(savedUserConfigs.getDocDir());
-            fileChooser.setInitialDirectory(filePath);
-        }
+        filePath = (filePath.exists() && filePath.isFile()) ?
+                filePath.getParentFile() : new File(savedUserConfigs.getLastOutPutDir());
+
+        fileChooser.setInitialDirectory(filePath);
 
         final File finalFile = fileChooser.showSaveDialog(inputTextOutputFile.getScene().getWindow());
 
@@ -261,32 +264,41 @@ public class HomeController implements Shutdownable {
 
             //4-) Update the FontIcon:
             fiPickOutputDir.setIconLiteral("far-folder-open");
+
+            inputTextOutputFile.setEditable(true);
         }
     }
 
     private void updateOutputDir() {
-        final String txt = inputTextOutputFile.getText();
-        final File currFile = new File(txt);
+        final String currValue = inputTextOutputFile.getText();
+        final File currFile = new File(currValue);
 
         // 1-) Validate:
-        if (txt.endsWith(".txt")) {
+        if (currValue.endsWith(".txt")) {
             // 2-) Update the config:
             if (currFile.exists()) {
-                savedUserConfigs.setLastOutputDir(txt);
-                savedUserConfigs.setLastFileName(txt);
-            } else if (currFile.getParentFile().exists()) {
+                savedUserConfigs.setLastOutputDir(currValue);
+                savedUserConfigs.setLastFileName(currValue);
+            } else if (currFile.getParentFile() != null
+                    && currFile.getParentFile().exists()
+                    && currFile.getParentFile().isDirectory()) {
                 savedUserConfigs.setLastOutputDir(currFile.getParent());
                 savedUserConfigs.setLastFileName(currFile.getName());
             }
 
-            // 3-) Save the config:/home/satnaka/IdeaProjects/BatchProcessor
+            // 3-) Save the config:
             inputTextOutputFile.setStyle(" -fx-border-width: 2;" + "-fx-border-color: "
                     + E_Colors.PRIMARY_ACCENT.getHex());
+            inputTextOutputFile.setTooltip(null);
+            btnStart.setDisable(false);
             savedUserConfigs.update();
 
         } else {
             inputTextOutputFile.setStyle(
-                    " -fx-border-width: 2;" + "-fx-border-color: " + E_Colors.ERROR_RED.getHex());
+                    " -fx-border-width: 2;" + "-fx-border-color: " + E_Colors.ERROR_RED.getHex()
+            );
+            inputTextOutputFile.setTooltip(new Tooltip("Informe um arquivo terminado em \"*.txt\""));
+            btnStart.setDisable(true);
         }
     }
 
