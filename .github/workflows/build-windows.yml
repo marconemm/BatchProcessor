@@ -1,0 +1,38 @@
+name: Build da Aplicação no Windows
+
+on:
+  push:
+    branches: [ develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  windows-build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Configurar o JDK 25
+        uses: actions/setup-java@v4
+        with:
+          java-version: '25'
+          distribution: 'oracle' # Distribuição estável e recomendada
+          cache: 'gradle'
+
+      # Gera o Fat JAR:
+      - name: Criar Fat JAR
+        run: .\gradlew fatJar
+
+      - name: Executar jpackage Nativo
+        shell: pwsh
+        run: |
+         $JAR_NAME = Get-ChildItem build/libs/*.jar | Select-Object -First 1 -ExpandProperty Name
+         jpackage --type app-image --dest build/windows --name "BatchProcessor" --main-jar $JAR_NAME --main-class br.com.getronics.Main --input build/libs/ --win-console --java-options "--enable-native-access=ALL-UNNAMED -Djavafx.verbose=false -Dprism.verbose=false"
+
+      - name: Disponibilizar o executável para Download
+        uses: actions/upload-artifact@v4
+        with:
+         name: BatchProcessor-Win
+         path: build/windows/**

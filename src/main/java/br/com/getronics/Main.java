@@ -1,8 +1,10 @@
+package br.com.getronics;
+
 import br.com.getronics.core.App;
 import javafx.application.Application;
 
 public class Main {
-    public static void main(String[] args) {
+    static void main(String[] args) {
         Application.launch(App.class, args);
     }
 }
