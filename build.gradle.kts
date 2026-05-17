@@ -9,12 +9,12 @@ version = "1.0"
 
 java {
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(21))
+        languageVersion.set(JavaLanguageVersion.of(25))
     }
 }
 
 javafx {
-    version = "21"
+    version = "25"
     modules("javafx.controls", "javafx.fxml")
 }
 
@@ -42,10 +42,9 @@ dependencies {
 }
 
 application {
-    mainClass.set("br.com.getronics.core.Main")
+    mainClass.set("Main")
 }
 
-// Fat JAR:
 tasks.register<Jar>("fatJar") {
     group = "build"
     description = "JAR único com todas as dependências para o programa rodar."
@@ -59,12 +58,11 @@ tasks.register<Jar>("fatJar") {
     }
 
     from(sourceSets.main.get().output)
-    dependsOn(configurations.runtimeClasspath)
-    from({
-        configurations.runtimeClasspath.get()
-            .filter { it.name.endsWith("jar") }
-            .map { zipTree(it) }
-    })
+
+    val runtimeClasspathFiles = provider {
+        configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) }
+    }
+    from(runtimeClasspathFiles)
 
     exclude("META-INF/*.SF")
     exclude("META-INF/*.DSA")
