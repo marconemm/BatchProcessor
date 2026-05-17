@@ -1,0 +1,33 @@
+name: Build da Aplicação no Windows
+
+# Define o que vai disparar a máquina virtual
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  meu-job-windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Configurar o JDK 25
+        uses: actions/setup-java@v4
+        with:
+          java-version: '25'
+          distribution: 'oracle' # Distribuição estável e recomendada
+          cache: 'gradle'
+
+      # Gera o Fat JAR:
+      - name: Criar Fat JAR
+        run: .\gradlew fatJar
+
+      - name: Executar jpackage Nativo
+        shell: pwsh
+        run: |
+          $JAR_NAME = Get-ChildItem build/libs/*.jar | Select-Object -First 1 -ExpandProperty Name
+          jpackage --type app-image --dest build/windows --name "BatchProcessor" --main-jar $JAR_NAME --main-class Main --input build/libs/ --win-console
