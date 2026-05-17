@@ -42,10 +42,9 @@ dependencies {
 }
 
 application {
-    mainClass.set("br.com.getronics.core.Main")
+    mainClass.set("Main")
 }
 
-// Tarefa Fat JAR corrigida e testada para Kotlin DSL
 tasks.register<Jar>("fatJar") {
     group = "build"
     description = "JAR único com todas as dependências para o programa rodar."
@@ -53,7 +52,7 @@ tasks.register<Jar>("fatJar") {
 
     manifest {
         attributes(
-            "Main-Class" to "br.com.getronics.core.Main",
+            "Main-Class" to "Main",
             "Multi-Release" to "true"
         )
     }
