@@ -29,7 +29,10 @@ jobs:
         shell: pwsh
         run: |
          $JAR_NAME = Get-ChildItem build/libs/*.jar | Select-Object -First 1 -ExpandProperty Name
-         jpackage --type app-image --dest build/windows --name "BatchProcessor" --main-jar $JAR_NAME --main-class br.com.getronics.Main --input build/libs/ --win-console --java-options "--enable-native-access=ALL-UNNAMED -Djavafx.verbose=false -Dprism.verbose=false"
+         jpackage '--type app-image --dest build/windows --name "BatchProcessor" --main-jar $JAR_NAME 
+          --main-class br.com.getronics.Main --input build/libs/ --win-console 
+          --java-options "--enable-native-access=ALL-UNNAMED -Djavafx.verbose=false -Dprism.verbose=false 
+          -Dprism.text=native -Dprism.lcdtext=true"'
 
       - name: Disponibilizar o executável para Download
         uses: actions/upload-artifact@v4

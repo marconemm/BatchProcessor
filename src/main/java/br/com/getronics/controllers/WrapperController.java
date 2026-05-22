@@ -9,6 +9,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.text.Font;
 
 import java.io.IOException;
 
@@ -42,6 +43,13 @@ public class WrapperController {
 
     @FXML
     private void openNewWindow(final E_Fxml fxml, final E_windowLayout layout) {
+        final String PATH = "/styles/Fonts/Mark_Pro/";
+        final int FONT_SIZE = 14;
+
+        Font.loadFont(getClass().getResourceAsStream(PATH + "Mark_Pro.ttf"), FONT_SIZE);
+        Font.loadFont(getClass().getResourceAsStream(PATH + "Mark_Pro_Heavy.ttf"), FONT_SIZE);
+        Font.loadFont(getClass().getResourceAsStream(PATH + "Mark_Pro_Medium.ttf"), FONT_SIZE);
+
         try {
             final FXMLLoader loader = new FXMLLoader(
                     getClass().getResource(fxml.getFilename())

@@ -10,26 +10,30 @@ public class ExcelToTextMapper implements DataMapper {
     private final List<WorkbookReader> mappedRowList;
     private final LinkedHashMap<String, List<WorkbookReader>> batchList;
     private WorkbookReader prevRow;
-    private byte blankRowInSequence;
+    private short blankRowInSequence, separatorSize;
 
     public ExcelToTextMapper() {
         mappedRowList = new ArrayList<>();
         batchList = new LinkedHashMap<>();
-        blankRowInSequence = 0;
+        blankRowInSequence = separatorSize = 0;
     }
 
     @Override
     public String getOutputHeader(final File file) {
-        final String separator1 = "==========================";
-        final String separator2 = "--------------------------";
-        final int start = file.getName().length() - 11;
-        final int end = file.getName().length() - 5;
-        final String number = file.getName().substring(start, end);
+        final String header = "Entregas em Lotes para a Ordem de Serviço da Planilha:\n" + file.getName();
+        separatorSize = (short) ((header.length() / 2) + 10);
 
-        return String.format("%s\n%s\nEntregas em Lotes para a Ordem de Serviço\nNúmero: %s\n%s",
+        final String separator1 = getSeparator("=");
+        final String separator2 = getSeparator("-");
+
+        separatorSize = (short) ((separatorSize / 2) - 6);
+
+        return String.format("%s\n%s  INICIO   %s\n%s\n%s\n%s",
                 separator1,
+                getSeparator("="),
+                getSeparator("="),
                 separator1,
-                number,
+                header,
                 separator2);
     }
 
@@ -109,17 +113,26 @@ public class ExcelToTextMapper implements DataMapper {
     @Override
     public String getBatchRow() {
         final StringBuilder result = new StringBuilder();
+        final short backUp = separatorSize;
 
+        separatorSize = (short) ((separatorSize * 2) + 12);
         batchList.entrySet()
                 .stream()
-                .sorted(Map.Entry.comparingByKey()) // Ordena pelas chaves (String)
-                .forEach(batch -> {
-                    batch.getValue().forEach(result::append);
-                    result.append("\nLote: (para cópia)\n")
-                            .append(getBatch(batch.getValue()))
-                            .append("__________")
-                            .append("\n\n");
-                });
+                .sorted(Map.Entry.comparingByKey()) // Sort by keys (Sequencial).
+                .forEach(batch -> result.append("Sequencial - ")
+                        .append(batch.getValue().getFirst().getId())
+                        .append("\nLote:\n")
+                        .append(getBatch(batch.getValue()))
+                        .append(getSeparator("_"))
+                        .append("\n\n")
+                );
+
+        separatorSize = backUp;
+        result.deleteCharAt(result.length() - 1); // remove the last "\n"
+        result.append(getSeparator("="))
+                .append("    FIM    ")
+                .append(getSeparator("="))
+                .append("\n\n\n");
 
         return result.toString();
     }
@@ -151,15 +164,22 @@ public class ExcelToTextMapper implements DataMapper {
     private String getBatch(final List<WorkbookReader> batchList) {
         final StringBuilder result = new StringBuilder();
 
-        batchList.forEach(x -> {
-            final String batch = String.format("%s;Tarefa: %s Observação: %s\n",
-                    x.getArtifactName(),
-                    x.getTask(),
-                    x.getRemark()
+        batchList.forEach(artifact -> {
+            final String batch = String.format("%s;Tarefa: %s \n",
+                    artifact.getArtifactName(),
+                    artifact.getTask()
             );
 
             result.append(batch);
         });
+
+        return result.toString();
+    }
+
+    private String getSeparator(final String c) {
+        final StringBuilder result = new StringBuilder(c);
+
+        result.repeat(c, Math.max(0, separatorSize));
 
         return result.toString();
     }

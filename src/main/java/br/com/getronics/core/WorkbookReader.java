@@ -12,7 +12,7 @@ import static org.apache.logging.log4j.LogManager.getLogger;
 public class WorkbookReader implements Comparable<WorkbookReader>, Cloneable {
     public static FormulaEvaluator evaluator;
     private final DataFormatter formatter;
-    private String id, artifactName, task, remark, qty;
+    private String id, artifactName, task;
     private short order;
 
     public WorkbookReader() {
@@ -47,16 +47,11 @@ public class WorkbookReader implements Comparable<WorkbookReader>, Cloneable {
         return task;
     }
 
-    public String getRemark() {
-        return remark;
-    }
 
     public void setInstance(final Row row) {
         id = getCellValueAsString(row.getCell(1));
-        qty = getCellValueAsString(row.getCell(8));
         artifactName = getCellValueAsString(row.getCell(9));
         task = getCellValueAsString(row.getCell(12));
-        remark = getCellValueAsString(row.getCell(13));
     }
 
     @Override
@@ -88,16 +83,7 @@ public class WorkbookReader implements Comparable<WorkbookReader>, Cloneable {
 
     @Override
     public String toString() {
-        String result;
-
-        if (!id.isBlank()) {
-            result = String.format("Sequencial - %s:\n%02d)- %s;Tarefa: %s Observação: %s\n",
-                    id, order, artifactName, task, remark);
-        } else {
-            result = String.format("%02d)- %s;Tarefa: %s Observação: %s\n", order, artifactName, task, remark);
-        }
-
-        return result;
+        return String.format("%s;Tarefa: %s \n", artifactName, task);
     }
 
     @Override

@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "br.com.getronics"
-version = "1.0"
+version = "1.1_Beta"
 
 java {
     toolchain {
@@ -43,6 +43,11 @@ dependencies {
 
 application {
     mainClass.set("br.com.getronics.Main")
+    applicationDefaultJvmArgs = listOf(
+        "-Djavafx.animation.fullspeed=true",
+        "-Dprism.text=native",
+        "-Dprism.lcdtext=true"
+    )
 }
 
 tasks.register<Jar>("fatJar") {
