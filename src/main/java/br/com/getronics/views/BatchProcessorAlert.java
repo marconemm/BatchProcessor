@@ -1,4 +1,4 @@
-package br.com.getronics.models.views;
+package br.com.getronics.views;
 
 import javafx.geometry.Rectangle2D;
 import javafx.scene.control.Alert;
@@ -27,7 +27,7 @@ public class BatchProcessorAlert extends Alert {
         } catch (IllegalArgumentException iae) {
             final Stage stage = (Stage) this.getDialogPane().getScene().getWindow();
 
-            this.setOnShowing(e -> {
+            this.setOnShowing(_ -> {
                 final Rectangle2D screenBounds = Screen.getPrimary().getVisualBounds();
 
                 this.setX((screenBounds.getWidth() - 700) / 2);

@@ -1,4 +1,4 @@
-package br.com.getronics.models.views;
+package br.com.getronics.views;
 
 import br.com.getronics.utils.BatchProcessorException;
 import br.com.getronics.utils.enums.E_LogType;

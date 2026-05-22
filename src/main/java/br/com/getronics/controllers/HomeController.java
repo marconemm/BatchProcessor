@@ -4,8 +4,8 @@ import br.com.getronics.configs.UserConfigs;
 import br.com.getronics.core.ExcelToTextMapper;
 import br.com.getronics.core.WorkbookReader;
 import br.com.getronics.interfaces.Shutdownable;
-import br.com.getronics.models.views.LogItem;
-import br.com.getronics.models.views.WorkbookItem;
+import br.com.getronics.views.LogItem;
+import br.com.getronics.views.WorkbookItem;
 import br.com.getronics.utils.enums.E_LogType;
 import br.com.getronics.utils.enums.styles.E_Colors;
 import javafx.application.Platform;
@@ -62,7 +62,7 @@ public class HomeController implements Shutdownable {
     public void initialize() {
         inputTextOutputFile.setText(savedUserConfigs.getLastOutPutDir());
         inputTextOutputFile.textProperty().addListener(
-                (e, oldValue, newValue) -> {
+                (_, oldValue, newValue) -> {
                     updateOutputDir();
                     getLogger().debug("inputTextOutputFile Listener: " +
                             "O texto mudou de: \"{}\" para: \"{}\"", oldValue, newValue);
@@ -202,7 +202,7 @@ public class HomeController implements Shutdownable {
         lblProgressBar.textProperty().bind(processTask.messageProperty());
 
         // 4. On finish:
-        processTask.setOnSucceeded(e -> {
+        processTask.setOnSucceeded(_ -> {
             addLog("Fim dos processamentos.", E_LogType.SUCCESS);
             getLogger().info("processTaskSucess(): Fim dos processamentos.");
             btnStart.setDisable(false);
@@ -211,7 +211,7 @@ public class HomeController implements Shutdownable {
             pbWorkBooks.progressProperty().unbind();
         });
 
-        processTask.setOnFailed(e -> {
+        processTask.setOnFailed(_ -> {
             final Throwable ex = processTask.getException();
 
             addLog(ex.getMessage(), E_LogType.ERROR);

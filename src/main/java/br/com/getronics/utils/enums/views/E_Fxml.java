@@ -6,6 +6,6 @@ public enum E_Fxml {
     WRAPPER;
 
     public String getFilename() {
-        return "/views/" + this.name().toLowerCase() + "View.fxml";
+        return "/br/com/getronics/views/" + this.name().toLowerCase() + "View.fxml";
     }
 }

@@ -21,21 +21,27 @@ jobs:
           distribution: 'oracle' # Distribuição estável e recomendada
           cache: 'gradle'
 
-      # Gera o Fat JAR:
-      - name: Criar Fat JAR
-        run: .\gradlew fatJar
-
-      - name: Executar jpackage Nativo
+      - name: Compilar e Reunir Módulos
         shell: pwsh
         run: |
-         $JAR_NAME = Get-ChildItem build/libs/*.jar | Select-Object -First 1 -ExpandProperty Name
-         jpackage '--type app-image --dest build/windows --name "BatchProcessor" --main-jar $JAR_NAME 
-          --main-class br.com.getronics.Main --input build/libs/ --win-console 
-          --java-options "--enable-native-access=ALL-UNNAMED -Djavafx.verbose=false -Dprism.verbose=false 
-          -Dprism.text=native -Dprism.lcdtext=true"'
+          .\gradlew clean
+          .\gradlew copyDependencies
+
+      - name: Executar jpackage Nativo com jlink
+        shell: pwsh
+        run: |
+          jpackage `
+          --type app-image `
+          --dest build/windows `
+          --name "BatchProcessor" `
+          --runtime-image "${env:JAVA_HOME}" `
+          --module-path "build/libs" `
+          --module br.com.getronics/br.com.getronics.Main `
+          --win-console `
+          --java-options "-Djavafx.verbose=false -Dprism.verbose=false -Dprism.text=native -Dprism.lcdtext=true --enable-native-access=javafx.graphics"
 
       - name: Disponibilizar o executável para Download
         uses: actions/upload-artifact@v4
         with:
-         name: BatchProcessor-Win
-         path: build/windows/**
+          name: BatchProcessor-Win
+          path: build/windows/**

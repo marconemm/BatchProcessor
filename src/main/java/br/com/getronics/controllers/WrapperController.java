@@ -43,7 +43,7 @@ public class WrapperController {
 
     @FXML
     private void openNewWindow(final E_Fxml fxml, final E_windowLayout layout) {
-        final String PATH = "/styles/Fonts/Mark_Pro/";
+        final String PATH = "/br/com/getronics/styles/Fonts/Mark_Pro/";
         final int FONT_SIZE = 14;
 
         Font.loadFont(getClass().getResourceAsStream(PATH + "Mark_Pro.ttf"), FONT_SIZE);

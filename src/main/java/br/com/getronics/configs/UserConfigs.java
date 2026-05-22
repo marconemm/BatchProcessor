@@ -1,6 +1,6 @@
 package br.com.getronics.configs;
 
-import br.com.getronics.models.views.BatchProcessorAlert;
+import br.com.getronics.views.BatchProcessorAlert;
 import br.com.getronics.utils.BatchProcessorException;
 import br.com.getronics.utils.enums.E_Project;
 import javafx.scene.control.Alert;
