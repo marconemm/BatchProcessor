@@ -8,6 +8,8 @@ import javafx.scene.control.ButtonType;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static org.apache.logging.log4j.LogManager.getLogger;
+
 public final class BaseController implements Shutdownable {
 
     public boolean isToCloseApplication() {
@@ -28,5 +30,26 @@ public final class BaseController implements Shutdownable {
 
     public void stopApplication(final Shutdownable content) {
         content.stop();
+    }
+
+    public void openNativeBrowser(final String url) {
+        final String OS = System.getProperty("os.name").toLowerCase();
+
+        try {
+            if (OS.contains("win")) {
+                // Windows:
+                new ProcessBuilder("cmd", "/c", "start", url).start();
+            } else if (OS.contains("nix") || OS.contains("nux") || OS.contains("aix")) {
+                // Linux OS:
+                new ProcessBuilder("xdg-open", url).start();
+            } else if (OS.contains("mac")) {
+                // MacOS:
+                new ProcessBuilder("open", url).start();
+            } else {
+                getLogger().warn("openNativeBrowser(): OS unknown.");
+            }
+        } catch (Exception ex) {
+            getLogger().error("openNativeBrowser(): {}", ex.getLocalizedMessage());
+        }
     }
 }

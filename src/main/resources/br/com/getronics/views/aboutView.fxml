@@ -1,18 +1,108 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.control.Hyperlink?>
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.StackPane?>
-<?import javafx.scene.layout.VBox?>
-<StackPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="600.0" minWidth="800.0" prefHeight="720.0"
-           prefWidth="1280.0" stylesheets="@../styles/index.css"
-           xmlns="http://javafx.com/javafx/25">
-    <VBox alignment="CENTER" prefHeight="200.0" prefWidth="100.0">
-        <Label alignment="CENTER" contentDisplay="CENTER" text="Tela de Sobre!"/>
-        <HBox alignment="CENTER">
-            <Label alignment="CENTER" contentDisplay="CENTER" text="Fontes:"/>
-            <Hyperlink text="https://www.onlinewebfonts.com"/>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.paint.ImagePattern?>
+<?import javafx.scene.shape.Circle?>
+<?import org.kordamp.ikonli.javafx.*?>
+<?import java.net.URL?>
+<AnchorPane prefHeight="720.0" prefWidth="1280.0" styleClass="about-container" xmlns="http://javafx.com/javafx/25"
+            xmlns:fx="http://javafx.com/fxml/1" fx:controller="br.com.getronics.controllers.AboutController">
+    <stylesheets>
+        <URL value="@../styles/index.css"/>
+        <URL value="@../styles/about.css"/>
+    </stylesheets>
+
+    <VBox alignment="CENTER" spacing="16.0" AnchorPane.bottomAnchor="16.0" AnchorPane.leftAnchor="16.0"
+          AnchorPane.rightAnchor="16.0" AnchorPane.topAnchor="16.0">
+
+        <!-- Header:-->
+        <HBox alignment="CENTER_LEFT" spacing="20.0" styleClass="header-zone" VBox.vgrow="NEVER">
+            <StackPane>
+                <Circle radius="52.0" styleClass="app-logo-bg" StackPane.alignment="CENTER"/>
+                <Circle radius="50.0" styleClass="app-logo-circle" StackPane.alignment="CENTER">
+                    <fill>
+                        <ImagePattern>
+                            <image>
+                                <Image url="@../images/logo.png"/>
+                            </image>
+                        </ImagePattern>
+                    </fill>
+                </Circle>
+            </StackPane>
+            <VBox alignment="CENTER_LEFT">
+                <Label styleClass="app-title" text="BatchProcessor"/>
+                <Label styleClass="app-subtitle" text="Versão 1.0 (Beta)"/>
+            </VBox>
         </HBox>
+
+        <!-- Software info:-->
+        <VBox spacing="12.0" styleClass="card-info" VBox.vgrow="ALWAYS">
+            <Label styleClass="card-title" text="Sobre o Sistema"/>
+            <Label text="Desenvolvido para otimizar o processamento, análise e gerenciamento de planilhas profissionais de forma automatizada e segura."
+                   wrapText="true"/>
+
+            <VBox spacing="6.0" styleClass="tech-section">
+                <Label styleClass="section-title" text="Tecnologias Utilizadas:"/>
+                <HBox spacing="6.0">
+                    <Label styleClass="tech-tag" text="Java 17">
+                        <graphic>
+                            <FontIcon iconLiteral="fab-java" styleClass="tech-icon"/>
+                        </graphic>
+                    </Label>
+
+                    <Label styleClass="tech-tag" text="JavaFX">
+                        <graphic>
+                            <FontIcon iconLiteral="fas-desktop" styleClass="tech-icon"/>
+                        </graphic>
+                    </Label>
+
+                    <Label styleClass="tech-tag" text="Apache POI">
+                        <graphic>
+                            <FontIcon iconLiteral="fas-file-excel" styleClass="tech-icon"/>
+                        </graphic>
+                    </Label>
+
+                    <Label styleClass="tech-tag" text="Gradle">
+                        <graphic>
+                            <FontIcon iconLiteral="fas-cogs" styleClass="tech-icon"/>
+                        </graphic>
+                    </Label>
+                </HBox>
+            </VBox>
+
+            <!-- Author info: -->
+            <VBox spacing="4.0" styleClass="author-section">
+                <Label styleClass="section-title" text="Desenvolvedor:"/>
+                <HBox alignment="CENTER_LEFT" spacing="8.0">
+                    <Label styleClass="tech-tag" text="Marcone Melo Mendonça">
+                        <graphic>
+                            <FontIcon iconLiteral="fas-user" styleClass="tech-icon"/>
+                        </graphic>
+                    </Label>
+                </HBox>
+            </VBox>
+            <VBox>
+                <Label styleClass="section-title" text="Contato:"/>
+                <HBox alignment="CENTER_LEFT" spacing="8.0">
+                    <Label styleClass="tech-tag" text="Github: ">
+                        <graphic>
+                            <FontIcon iconLiteral="fab-github" styleClass="tech-icon"/>
+                        </graphic>
+                    </Label>
+                    <Hyperlink fx:id="lnkGithub" onAction="#handleOpenGithub" styleClass="author-link"
+                               text="https://github.com/marconemm/BatchProcessor"/>
+                </HBox>
+            </VBox>
+        </VBox>
+
+        <!-- Footer: -->
+        <HBox alignment="CENTER_RIGHT" spacing="20.0" styleClass="footer-zone">
+            <Label styleClass="footer-text" text="© 2026 Marcone. Distribuído sob os termos da Licença MIT." HBox.hgrow="ALWAYS"/>
+            <Button fx:id="btnBack" mnemonicParsing="false" onAction="#handleBack" styleClass="btn-close"
+                    text="Voltar"/>
+        </HBox>
+
     </VBox>
-</StackPane>
+</AnchorPane>

@@ -36,6 +36,7 @@ dependencies {
 
     // Ikonli, POI and Jackson:
     implementation("org.kordamp.ikonli:ikonli-javafx:12.4.0")
+    implementation("org.kordamp.ikonli:ikonli-fontawesome5-pack:12.4.0")
     implementation("org.kordamp.ikonli:ikonli-fontawesome6-pack:12.4.0")
     implementation("org.apache.poi:poi-ooxml:5.5.1")
 

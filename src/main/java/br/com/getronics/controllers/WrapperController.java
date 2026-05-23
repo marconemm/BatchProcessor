@@ -16,6 +16,7 @@ import java.io.IOException;
 import static org.apache.logging.log4j.LogManager.getLogger;
 
 public class WrapperController {
+    private static WrapperController instance;
     private Shutdownable currentController;
 
     @FXML
@@ -36,13 +37,18 @@ public class WrapperController {
         return currentController;
     }
 
+    public static WrapperController getInstance() {
+        return instance;
+    }
+
     @FXML
     private void initialize() {
+        instance = this;
         openNewWindow(E_Fxml.HOME, E_windowLayout.CENTER_FULL);
     }
 
     @FXML
-    private void openNewWindow(final E_Fxml fxml, final E_windowLayout layout) {
+    public void openNewWindow(final E_Fxml fxml, final E_windowLayout layout) {
         final String PATH = "/br/com/getronics/styles/Fonts/Mark_Pro/";
         final int FONT_SIZE = 14;
 

@@ -33,6 +33,8 @@ module br.com.getronics {
 
     exports br.com.getronics.core;
     exports br.com.getronics.controllers;
+    exports br.com.getronics.utils.enums.views;
+    exports br.com.getronics.interfaces;
     exports br.com.getronics;
     opens br.com.getronics to javafx.fxml, javafx.graphics;
 }
